@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.136 -->
+<!-- TI4 Tracker 2.137 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -348,7 +348,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.136';
+var VERSION = '2.137';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -1662,21 +1662,60 @@ function openDB() {
 function dbGet(store, key) {
   return openDB().then(function(d) {
     return new Promise(function(resolve) {
-      var r = d.transaction(store).objectStore(store).get(key);
-      r.onsuccess = function() { resolve(r.result); };
-      r.onerror = function() { resolve(null); };
+      try {
+        var r = d.transaction(store).objectStore(store).get(key);
+        r.onsuccess = function() {
+          var rec = r.result;
+          if (rec) { resolve(rec); return; }
+          // Fall back to the localStorage shadow used by the front page
+          if (store === 'settings') {
+            try {
+              var ls = localStorage.getItem('bg-settings:' + key);
+              if (ls != null) { resolve({ k: key, v: ls }); return; }
+            } catch (e) {}
+          }
+          resolve(null);
+        };
+        r.onerror = function() {
+          if (store === 'settings') {
+            try {
+              var ls = localStorage.getItem('bg-settings:' + key);
+              if (ls != null) { resolve({ k: key, v: ls }); return; }
+            } catch (e) {}
+          }
+          resolve(null);
+        };
+      } catch (e) { resolve(null); }
     });
+  }).catch(function() {
+    if (store === 'settings') {
+      return new Promise(function(resolve) {
+        try {
+          var ls = localStorage.getItem('bg-settings:' + key);
+          if (ls != null) { resolve({ k: key, v: ls }); return; }
+        } catch (e) {}
+        resolve(null);
+      });
+    }
+    return null;
   });
 }
 
 function dbSet(store, value) {
+  // Mirror string-valued settings to localStorage so front page and TI4 stay in sync
+  // even when IndexedDB is misbehaving on this device.
+  if (store === 'settings' && value && value.k && typeof value.v === 'string') {
+    try { localStorage.setItem('bg-settings:' + value.k, value.v); } catch (e) {}
+  }
   return openDB().then(function(d) {
     return new Promise(function(resolve) {
-      var r = d.transaction(store, 'readwrite').objectStore(store).put(value);
-      r.onsuccess = function() { resolve(true); };
-      r.onerror = function() { resolve(false); };
+      try {
+        var r = d.transaction(store, 'readwrite').objectStore(store).put(value);
+        r.onsuccess = function() { resolve(true); };
+        r.onerror = function() { resolve(false); };
+      } catch (e) { resolve(false); }
     });
-  });
+  }).catch(function() { return false; });
 }
 
 function dbGetAll(store) {
