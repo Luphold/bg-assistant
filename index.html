@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.2 - front page with settings -->
+<!-- Board Game Assistant v1.3 - admin frame + guest router -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -104,6 +104,56 @@
       text-transform: uppercase;
       margin: 18px 0 10px 0;
       text-align: center;
+    }
+    
+    /* Admin frame containing the game cards */
+    .admin-frame {
+      border: 1px solid var(--border2);
+      border-radius: 12px;
+      padding: 26px 16px 16px 16px;
+      margin-bottom: 22px;
+      position: relative;
+      background: rgba(212, 172, 13, 0.03);
+    }
+    .admin-label {
+      position: absolute;
+      top: -10px;
+      left: 18px;
+      background: var(--bg);
+      padding: 0 10px;
+      font-size: 11px;
+      letter-spacing: .2em;
+      color: var(--gold);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    
+    /* Big Guest button */
+    .big-guest-btn {
+      display: block;
+      width: 100%;
+      padding: 22px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(212, 172, 13, 0.08);
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.18s;
+      text-align: center;
+      backdrop-filter: blur(2px);
+    }
+    .big-guest-btn:hover {
+      background: rgba(212, 172, 13, 0.18);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 18px rgba(212, 172, 13, 0.2);
+    }
+    .big-guest-btn:active {
+      transform: translateY(0);
     }
     .games {
       display: grid;
@@ -341,44 +391,50 @@
       <input type="text" id="username" placeholder="Enter your username" maxlength="20" autocomplete="off">
     </div>
     
-    <div class="section-h">Games</div>
-    <div class="games" id="games-grid">
-      
-      <!-- Twilight Imperium IV -->
-      <div class="game-card available" data-game="ti4">
-        <div class="game-emoji">🚀</div>
-        <div class="game-title">Twilight Imperium IV</div>
-        <div class="game-desc">Score tracker · faction reference · voting · live sync</div>
-        <div class="game-game-stats" id="game-stats-ti4"></div>
-        <div class="game-actions">
-          <a href="ti4/">Companion</a>
-          <a class="disabled" title="Setup guide coming soon">Setup Guide</a>
+    <!-- ============ ADMIN SECTION ============ -->
+    <div class="admin-frame">
+      <div class="admin-label">ADMIN</div>
+      <div class="games" id="games-grid">
+        
+        <!-- Twilight Imperium IV -->
+        <div class="game-card available" data-game="ti4">
+          <div class="game-emoji">🚀</div>
+          <div class="game-title">Twilight Imperium IV</div>
+          <div class="game-desc">Score tracker · faction reference · voting · live sync</div>
+          <div class="game-game-stats" id="game-stats-ti4"></div>
+          <div class="game-actions">
+            <a href="ti4/?admin=1">Companion</a>
+            <a class="disabled" title="Setup guide coming soon">Setup Guide</a>
+          </div>
         </div>
-      </div>
-      
-      <!-- Catan (placeholder) -->
-      <div class="game-card placeholder" data-game="catan">
-        <div class="game-emoji">🐑</div>
-        <div class="game-title">Catan</div>
-        <div class="game-desc">Resource tracker · longest road · largest army · auto-totals</div>
-        <div class="game-actions">
-          <a class="disabled">Companion</a>
-          <a class="disabled">Setup Guide</a>
+        
+        <!-- Catan (placeholder) -->
+        <div class="game-card placeholder" data-game="catan">
+          <div class="game-emoji">🐑</div>
+          <div class="game-title">Catan</div>
+          <div class="game-desc">Resource tracker · longest road · largest army · auto-totals</div>
+          <div class="game-actions">
+            <a class="disabled">Companion</a>
+            <a class="disabled">Setup Guide</a>
+          </div>
         </div>
-      </div>
-      
-      <!-- Small World (placeholder) -->
-      <div class="game-card placeholder" data-game="smallworld">
-        <div class="game-emoji">🗺</div>
-        <div class="game-title">Small World</div>
-        <div class="game-desc">Race + power picker · round-by-round VP tracker</div>
-        <div class="game-actions">
-          <a class="disabled">Companion</a>
-          <a class="disabled">Setup Guide</a>
+        
+        <!-- Small World (placeholder) -->
+        <div class="game-card placeholder" data-game="smallworld">
+          <div class="game-emoji">🗺</div>
+          <div class="game-title">Small World</div>
+          <div class="game-desc">Race + power picker · round-by-round VP tracker</div>
+          <div class="game-actions">
+            <a class="disabled">Companion</a>
+            <a class="disabled">Setup Guide</a>
+          </div>
         </div>
+        
       </div>
-      
     </div>
+    
+    <!-- ============ GUEST BUTTON ============ -->
+    <button class="big-guest-btn" id="btn-guest">🎲 Join as Guest</button>
     
     <div class="section-h">Global Stats</div>
     <div class="stats-panel" id="stats-panel">
@@ -387,9 +443,29 @@
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.2.0</div>
+      <div class="version">v1.3.0</div>
     </div>
     
+  </div>
+  
+  <!-- Guest join modal -->
+  <div class="modal-overlay" id="guest-modal">
+    <div class="modal">
+      <h2>🎲 Join as Guest</h2>
+      <div class="modal-sub">Enter the room code from your game's admin — we'll route you to the right game automatically.</div>
+      
+      <label for="inp-room-code">Room Code</label>
+      <input type="text" id="inp-room-code" placeholder="ABCDEF" maxlength="6" autocomplete="off" style="text-align:center;font-size:22px;letter-spacing:.25em;text-transform:uppercase;font-weight:700">
+      
+      <div class="help" id="guest-help">
+        The code is 6 letters/digits — case doesn't matter.
+      </div>
+      
+      <div class="modal-actions">
+        <button id="btn-guest-cancel">Cancel</button>
+        <button class="primary" id="btn-guest-join">Join</button>
+      </div>
+    </div>
   </div>
   
   <!-- Settings modal -->
@@ -496,6 +572,98 @@
     }
     document.getElementById('btn-gear').addEventListener('click', openSettings);
     document.getElementById('btn-cancel').addEventListener('click', closeSettings);
+    
+    // ===== Guest join =====
+    function openGuestModal() {
+      document.getElementById('inp-room-code').value = '';
+      document.getElementById('guest-help').innerHTML = 'The code is 6 letters/digits — case doesn\'t matter.';
+      document.getElementById('guest-help').style.color = '';
+      document.getElementById('guest-modal').classList.add('open');
+      setTimeout(function() { document.getElementById('inp-room-code').focus(); }, 100);
+    }
+    function closeGuestModal() {
+      document.getElementById('guest-modal').classList.remove('open');
+    }
+    document.getElementById('btn-guest').addEventListener('click', function() {
+      // Need supabase to look up room
+      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
+        var url = results[0] && results[0].v;
+        var key = results[1] && results[1].v;
+        if (!url || !key) {
+          alert('Please configure Supabase settings first (⚙ gear icon).');
+          openSettings();
+          return;
+        }
+        openGuestModal();
+      });
+    });
+    document.getElementById('btn-guest-cancel').addEventListener('click', closeGuestModal);
+    document.getElementById('guest-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeGuestModal();
+    });
+    
+    // Routing table: for each known game type, where to redirect with the guest room code
+    var GUEST_ROOM_TABLES = [
+      { gameType: 'ti4',        table: 'ti4_rooms',        path: 'ti4/?guest=' }
+      // Add future game lookups here, e.g.:
+      // { gameType: 'catan',      table: 'catan_rooms',      path: 'catan/?guest=' },
+      // { gameType: 'smallworld', table: 'smallworld_rooms', path: 'smallworld/?guest=' }
+    ];
+    
+    function joinAsGuest() {
+      var input = document.getElementById('inp-room-code');
+      var code = (input.value || '').trim().toUpperCase();
+      var help = document.getElementById('guest-help');
+      if (!code || code.length < 4) {
+        help.innerHTML = 'Please enter a valid room code (at least 4 characters).';
+        help.style.color = 'var(--red)';
+        return;
+      }
+      var btn = document.getElementById('btn-guest-join');
+      btn.disabled = true; btn.textContent = 'Looking up...';
+      help.style.color = 'var(--text-dim)';
+      help.innerHTML = 'Searching for room ' + escapeHtml(code) + '…';
+      
+      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
+        var url = results[0] && results[0].v;
+        var key = results[1] && results[1].v;
+        if (!url || !key) throw new Error('Supabase not configured');
+        return loadSupabase(url, key);
+      }).then(function(client) {
+        // Try each game's room table in sequence
+        var idx = 0;
+        function tryNext() {
+          if (idx >= GUEST_ROOM_TABLES.length) {
+            help.style.color = 'var(--red)';
+            help.innerHTML = 'Room <b>' + escapeHtml(code) + '</b> not found in any game. Check the code and try again.';
+            btn.disabled = false; btn.textContent = 'Join';
+            return;
+          }
+          var entry = GUEST_ROOM_TABLES[idx++];
+          client.from(entry.table).select('room_code').eq('room_code', code).maybeSingle().then(function(r) {
+            if (r.error || !r.data) {
+              tryNext();
+              return;
+            }
+            // Found it! Redirect.
+            help.innerHTML = 'Found in <b>' + entry.gameType.toUpperCase() + '</b> — joining…';
+            help.style.color = 'var(--gold)';
+            setTimeout(function() {
+              location.href = entry.path + encodeURIComponent(code);
+            }, 400);
+          }).catch(function() { tryNext(); });
+        }
+        tryNext();
+      }).catch(function(e) {
+        help.style.color = 'var(--red)';
+        help.innerHTML = 'Could not search: ' + escapeHtml(e && e.message ? e.message : 'unknown error');
+        btn.disabled = false; btn.textContent = 'Join';
+      });
+    }
+    document.getElementById('btn-guest-join').addEventListener('click', joinAsGuest);
+    document.getElementById('inp-room-code').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') joinAsGuest();
+    });
     
     document.getElementById('btn-save').addEventListener('click', function() {
       var url = document.getElementById('inp-url').value.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');

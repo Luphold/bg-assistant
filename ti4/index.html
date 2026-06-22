@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.129 -->
+<!-- TI4 Tracker 2.130 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -167,9 +167,21 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
       <label>Username</label>
       <input id="inp-username" type="text" placeholder="Your display name" maxlength="20">
       <div class="small dim" id="url-display" style="margin-top:8px"></div>
-      <button id="btn-resume-admin" class="btn btn-primary btn-full mt-16" style="display:none;background:rgba(93,184,255,0.15);border-color:#5db8ff;color:#5db8ff;font-size:18px;font-weight:700;padding:18px;letter-spacing:.05em">↺ Resume Previous Game</button>
-      <button id="btn-admin" class="btn btn-primary btn-full mt-16" style="font-size:20px;font-weight:700;padding:22px;letter-spacing:.08em">Enter as Admin</button>
-      <button id="btn-guest" class="btn btn-full mt-8" style="font-size:20px;font-weight:700;padding:22px;letter-spacing:.08em">Enter as Guest</button>
+      
+      <!-- Admin path: shown when URL has ?admin=1 (or no flag) -->
+      <div id="admin-chooser" style="display:none">
+        <div class="small gold mt-16" style="text-align:center;letter-spacing:.1em;text-transform:uppercase;font-size:11px">Admin</div>
+        <button id="btn-resume-admin" class="btn btn-primary btn-full mt-8" style="display:none;background:rgba(93,184,255,0.15);border-color:#5db8ff;color:#5db8ff;font-size:18px;font-weight:700;padding:18px;letter-spacing:.05em">↺ Resume Previous Game</button>
+        <button id="btn-admin" class="btn btn-primary btn-full mt-8" style="font-size:20px;font-weight:700;padding:22px;letter-spacing:.08em">Start New Game</button>
+      </div>
+      
+      <!-- Guest path: shown when URL has ?guest=ROOMCODE -->
+      <div id="guest-auto" style="display:none">
+        <div class="small gold mt-16" style="text-align:center;letter-spacing:.1em;text-transform:uppercase;font-size:11px">Joining as Guest</div>
+        <div class="mt-8" style="text-align:center;font-size:22px;letter-spacing:.2em;color:var(--gold);font-weight:700" id="guest-room-display">—</div>
+        <button id="btn-guest-join" class="btn btn-primary btn-full mt-16" style="font-size:20px;font-weight:700;padding:22px;letter-spacing:.08em">Join Game</button>
+      </div>
+      
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
         <a href="../" class="btn btn-sm dim" style="border:none;background:none;color:var(--text-dim);font-size:12px;text-decoration:none">⮌ Front Page</a>
         <button id="btn-howto" class="btn btn-sm dim" style="border:none;background:none;color:var(--text-dim);font-size:12px">📖 How To</button>
@@ -178,8 +190,8 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
   </div>
 </div>
 
-<!-- Join screen -->
-<div id="screen-join" class="screen">
+<!-- Legacy join screen (kept hidden — not used in new flow but referenced by code paths) -->
+<div id="screen-join" class="screen" style="display:none">
   <div class="logo" style="font-size:20px">Join Game</div>
   <div class="panel">
     <label>Room Code</label>
@@ -325,7 +337,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.129';
+var VERSION = '2.130';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -5375,6 +5387,23 @@ function enterAsGuest() {
   showScreen('screen-join');
 }
 
+// Auto-join via URL param ?guest=ROOMCODE
+function enterAsGuestFromUrl() {
+  captureUsername();
+  var code = (window._guestRoomCode || '').toUpperCase();
+  if (!code || code.length < 4) {
+    alert('No valid room code in URL.');
+    return;
+  }
+  log('Auto-joining room ' + code + ' as guest');
+  isAdmin = false;
+  roomCode = code;
+  // Reuse the same flow as the legacy join — set inp-room and call joinGame
+  var inp = document.getElementById('inp-room');
+  if (inp) inp.value = code;
+  joinGame();
+}
+
 function joinGame() {
   var code = document.getElementById('inp-room').value.trim().toUpperCase();
   if (code.length < 4) return alert('Enter a valid room code');
@@ -5415,7 +5444,7 @@ function clearCache() {
 document.getElementById('btn-reset').addEventListener('click', clearCache);
 document.getElementById('btn-admin').addEventListener('click', enterAsAdmin);
 document.getElementById('btn-resume-admin').addEventListener('click', resumeAsAdmin);
-document.getElementById('btn-guest').addEventListener('click', enterAsGuest);
+document.getElementById('btn-guest-join').addEventListener('click', enterAsGuestFromUrl);
 document.getElementById('btn-howto').addEventListener('click', showHowTo);
 document.getElementById('btn-join').addEventListener('click', joinGame);
 document.getElementById('btn-join-back').addEventListener('click', function() { showScreen('screen-welcome'); });
@@ -5643,12 +5672,17 @@ window.showHowTo = showHowTo;
 
 function init() {
   log('Init starting');
+  // Parse URL params: ?admin=1 or ?guest=ROOMCODE
+  var urlParams = new URLSearchParams(window.location.search);
+  var isGuestUrl = urlParams.has('guest');
+  var guestCode = (urlParams.get('guest') || '').toUpperCase();
+  window._guestRoomCode = guestCode;
+  // Default to admin mode if neither flag is set (e.g. direct URL access)
+  
   Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key'), dbGet('settings', 'username')]).then(function(results) {
     var url = results[0] && results[0].v;
     var key = results[1] && results[1].v;
     var username = results[2] && results[2].v;
-    // If TI4 has no username stored yet, fall back to the shared bg_username from localStorage
-    // (set by the front-page Board Game Assistant). This lets users enter their name once.
     if (!username) {
       try {
         var shared = localStorage.getItem('bg_username');
@@ -5665,9 +5699,22 @@ function init() {
       document.getElementById('url-display').textContent = url;
       document.getElementById('setup-form').style.display = 'none';
       document.getElementById('login-form').style.display = '';
+      
+      // Show admin chooser or guest auto-join based on URL params
+      if (isGuestUrl && guestCode) {
+        document.getElementById('guest-auto').style.display = '';
+        document.getElementById('admin-chooser').style.display = 'none';
+        document.getElementById('guest-room-display').textContent = guestCode;
+      } else {
+        document.getElementById('admin-chooser').style.display = '';
+        document.getElementById('guest-auto').style.display = 'none';
+      }
+      
       initSupabase(url, key).then(function() {
-        // Check if there's a resumable game
-        return checkResumableGame();
+        if (!isGuestUrl) {
+          // Only check resume in admin mode
+          return checkResumableGame();
+        }
       }).catch(function(e) { log('Init Supabase failed: ' + e.message); });
     } else {
       log('No saved credentials');
