@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.5.2 - fix non-clickable Open Settings link in stats panel -->
+<!-- Board Game Assistant v1.5.3 - delegated click handler for Open Settings link -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -497,7 +497,7 @@
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.5.2</div>
+      <div class="version">v1.5.3</div>
     </div>
     
   </div>
@@ -831,8 +831,16 @@
       return '<div class="stats-empty">No games recorded yet — stats will appear here once you finish your first game.</div>';
     }
     function statsNoSupabaseMessage() {
-      return '<div class="no-supabase">Stats need Supabase access. <a href="#" onclick="openSettings();return false;" style="cursor:pointer">Open Settings</a> to enter your Supabase URL and key.</div>';
+      return '<div class="no-supabase">Stats need Supabase access. <a href="#" id="link-open-settings" style="cursor:pointer">Open Settings</a> to enter your Supabase URL and key.</div>';
     }
+    // Attach click listener via delegation so it works no matter when the link is added/replaced
+    document.addEventListener('click', function(e) {
+      var t = e.target;
+      if (t && t.id === 'link-open-settings') {
+        e.preventDefault();
+        openSettings();
+      }
+    });
     
     function renderStatsFromRows(rows) {
       var panel = document.getElementById('stats-panel');
