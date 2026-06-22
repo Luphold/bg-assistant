@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.6 - renamed IndexedDB to 'bg-assistant' -->
+<!-- Board Game Assistant v1.6.1 - don't block clicks inside modals -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -497,7 +497,7 @@
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.6.0</div>
+      <div class="version">v1.6.1</div>
     </div>
     
   </div>
@@ -570,8 +570,10 @@
     }
     document.addEventListener('click', function(e) {
       if (hasUsername()) return;
-      // Allow clicking inside the username panel itself (focusing the field, etc.)
+      // Allow clicks inside the username panel (to focus the field)
       if (e.target.closest('.user-panel')) return;
+      // Allow clicks inside any modal (settings, guest join, etc) — modals have their own validation
+      if (e.target.closest('.modal-overlay')) return;
       // Block any clickable target: links, buttons (game cards, gear, guest button)
       var clickable = e.target.closest('a, button');
       if (!clickable) return;
