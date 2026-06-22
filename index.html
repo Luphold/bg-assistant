@@ -457,7 +457,7 @@
           supabase.from('bg_game_log').select('*').order('played_at', { ascending: false }).limit(200).then(function(r) {
             if (r.error) {
               if (r.error.message && r.error.message.indexOf('bg_game_log') >= 0) {
-                document.getElementById('stats-panel').innerHTML = '<div class="no-supabase">Stats table not found. Please run the latest <code>supabase-setup.sql</code> or <code>supabase-migration-v1-to-v2.sql</code> in your Supabase project.</div>';
+                document.getElementById('stats-panel').innerHTML = '<div class="no-supabase">Stats table not found. Please run the latest <code>supabase-setup.sql</code> in your Supabase project.</div>';
               } else {
                 document.getElementById('stats-panel').innerHTML = '<div class="stats-empty">Could not load stats: ' + escapeHtml(r.error.message || 'unknown error') + '</div>';
               }

@@ -83,7 +83,7 @@ This creates three tables: `ti4_rooms` (current game state), `ti4_history` (clou
 
 ### Step 4 — Open the app
 
-Open the app at **[https://luphold.github.io/ti4-tracker/](https://luphold.github.io/ti4-tracker/)** in your browser.
+Open the Board Game Assistant front page in your browser (for example `https://yourname.github.io/bg-assistant/`) and tap **Twilight Imperium IV → Companion**.
 
 1. Paste the **Project URL** into the URL field
 2. Paste the **Anon Key** into the key field

@@ -37,29 +37,9 @@ Each game folder is fully self-contained — its own HTML, JS, service worker, a
 
 ## Getting started
 
-### New install
-
-1. **Supabase setup** — required for TI4 and any future games that sync across devices. Run `ti4/supabase-setup.sql` in your Supabase project's SQL editor. This creates everything from scratch.
-2. **Open the app** — visit your hosted URL (e.g. `https://luphold.github.io/ti4-tracker/`). You'll land on the front page. Tap **Twilight Imperium IV → Companion** to enter the TI4 app, then paste your Supabase URL + anon key in the settings screen.
+1. **Supabase setup** — required for TI4 and any future games that sync across devices. Run `ti4/supabase-setup.sql` in your Supabase project's SQL editor. This creates the database schema (TI4 tables + the cross-game stats log).
+2. **Open the app** — visit your hosted URL (for example `https://yourname.github.io/bg-assistant/`). You'll land on the front page. Tap **Twilight Imperium IV → Companion** to enter the TI4 app, then paste your Supabase URL + anon key in the settings screen.
 3. **Username** — set once on the front page. Stored in `localStorage` under the key `bg_username`. All sub-apps read it, so you only enter it once.
-
-### Upgrading from a previous TI4-only deployment
-
-If you've been using TI4 standalone and just upgraded to Board Game Assistant:
-
-1. Run `ti4/supabase-migration-v1-to-v2.sql` in your Supabase project. This **adds** the new `bg_game_log` table for cross-game stats. It does NOT touch your existing data.
-2. Drop the new files into your existing GitHub Pages repo (front-page index.html, sw.js, manifest.json, icons/, plus the `ti4/` subfolder).
-
-After upgrading, the front-page Global Stats panel will start showing real numbers as you finish games.
-
----
-
-## SQL files
-
-| File | When to run |
-|---|---|
-| `ti4/supabase-setup.sql` | First-time install, or to wipe and rebuild from scratch. **Drops existing tables.** |
-| `ti4/supabase-migration-v1-to-v2.sql` | Existing TI4-only project upgrading to the new stats feature. **Safe — additive only.** |
 
 ---
 
