@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.140 -->
+<!-- TI4 Tracker 2.141 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -349,7 +349,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.140';
+var VERSION = '2.141';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -1661,6 +1661,18 @@ function openDB() {
 }
 
 function dbGet(store, key) {
+  function readLsShadow() {
+    if (store !== 'settings') return null;
+    try {
+      var ls = localStorage.getItem('bg-settings:' + key);
+      if (ls == null) return null;
+      if (ls.indexOf('__json__') === 0) {
+        try { return { k: key, v: JSON.parse(ls.substring(8)) }; }
+        catch (e) { return null; }
+      }
+      return { k: key, v: ls };
+    } catch (e) { return null; }
+  }
   return openDB().then(function(d) {
     return new Promise(function(resolve) {
       try {
@@ -1668,45 +1680,31 @@ function dbGet(store, key) {
         r.onsuccess = function() {
           var rec = r.result;
           if (rec) { resolve(rec); return; }
-          // Fall back to the localStorage shadow used by the front page
-          if (store === 'settings') {
-            try {
-              var ls = localStorage.getItem('bg-settings:' + key);
-              if (ls != null) { resolve({ k: key, v: ls }); return; }
-            } catch (e) {}
-          }
-          resolve(null);
+          var shadow = readLsShadow();
+          resolve(shadow);
         };
-        r.onerror = function() {
-          if (store === 'settings') {
-            try {
-              var ls = localStorage.getItem('bg-settings:' + key);
-              if (ls != null) { resolve({ k: key, v: ls }); return; }
-            } catch (e) {}
-          }
-          resolve(null);
-        };
-      } catch (e) { resolve(null); }
+        r.onerror = function() { resolve(readLsShadow()); };
+      } catch (e) { resolve(readLsShadow()); }
     });
   }).catch(function() {
-    if (store === 'settings') {
-      return new Promise(function(resolve) {
-        try {
-          var ls = localStorage.getItem('bg-settings:' + key);
-          if (ls != null) { resolve({ k: key, v: ls }); return; }
-        } catch (e) {}
-        resolve(null);
-      });
-    }
-    return null;
+    return readLsShadow();
   });
 }
 
 function dbSet(store, value) {
-  // Mirror string-valued settings to localStorage so front page and TI4 stay in sync
+  // Mirror settings to localStorage so front page and TI4 stay in sync
   // even when IndexedDB is misbehaving on this device.
-  if (store === 'settings' && value && value.k && typeof value.v === 'string') {
-    try { localStorage.setItem('bg-settings:' + value.k, value.v); } catch (e) {}
+  if (store === 'settings' && value && value.k) {
+    try {
+      if (typeof value.v === 'string') {
+        localStorage.setItem('bg-settings:' + value.k, value.v);
+      } else if (value.v === null || value.v === undefined) {
+        localStorage.removeItem('bg-settings:' + value.k);
+      } else {
+        // JSON-encode objects/numbers with a prefix so we can decode safely on read
+        localStorage.setItem('bg-settings:' + value.k, '__json__' + JSON.stringify(value.v));
+      }
+    } catch (e) {}
   }
   return openDB().then(function(d) {
     return new Promise(function(resolve) {
@@ -6029,31 +6027,35 @@ function checkResumableGame() {
     // Remote check
     dbGet('settings', 'lastRoom').then(function(rec) {
       var savedCode = rec && rec.v;
+      log('checkResume: lastRoom = ' + savedCode);
       if (!savedCode || !supabase) return null;
       return supabase.from('ti4_rooms').select('state, updated_at').eq('room_code', savedCode).maybeSingle().then(function(r) {
-        if (r.error || !r.data) return null;
+        if (r.error) { log('checkResume remote error: ' + r.error.message); return null; }
+        if (!r.data) { log('checkResume: no remote row for ' + savedCode); return null; }
         var s = r.data.state;
-        // Resume any room that's not ended (covers both setup-only and in-progress games)
+        log('checkResume: remote state.started=' + (s && s.started) + ', ended=' + (s && s.ended));
         if (s && !s.ended) {
           return { source: 'remote', roomCode: savedCode, state: s, savedAt: r.data.updated_at };
         }
         return null;
-      }).catch(function() { return null; });
+      }).catch(function(e) { log('checkResume remote exception: ' + e.message); return null; });
     }),
     // Local check
     loadLocalSnapshot().then(function(snap) {
+      log('checkResume: localSnap = ' + (snap ? snap.roomCode + ' (started=' + (snap.state && snap.state.started) + ', ended=' + (snap.state && snap.state.ended) + ')' : 'none'));
       if (!snap || !snap.state || snap.state.ended) return null;
       return { source: 'local', roomCode: snap.roomCode, state: snap.state, savedAt: snap.savedAt };
-    }).catch(function() { return null; })
+    }).catch(function(e) { log('checkResume local exception: ' + e.message); return null; })
   ]).then(function(results) {
     window._remoteResume = results[0];
     window._localResume = results[1];
     var hasRemote = !!window._remoteResume;
     var hasLocal = !!window._localResume;
-    if (!hasRemote && !hasLocal) return; // nothing to resume
+    log('checkResume done. remote=' + hasRemote + ', local=' + hasLocal);
+    if (!hasRemote && !hasLocal) return;
     
     var btn = document.getElementById('btn-resume-admin');
-    if (!btn) return;
+    if (!btn) { log('checkResume: no btn-resume-admin element'); return; }
     btn.style.display = '';
     
     if (hasRemote && hasLocal && window._remoteResume.roomCode === window._localResume.roomCode) {
