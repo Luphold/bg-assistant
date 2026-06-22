@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.5.3 - delegated click handler for Open Settings link -->
+<!-- Board Game Assistant v1.6 - renamed IndexedDB to 'bg-assistant' -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -497,7 +497,7 @@
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.5.3</div>
+      <div class="version">v1.6.0</div>
     </div>
     
   </div>
@@ -584,54 +584,27 @@
     // ===== IndexedDB (shared with TI4 — same DB name, same store) =====
     function openDB() {
       return new Promise(function(resolve, reject) {
-        // Use 'ti4' DB to match TI4 app — this is where Supabase URL/key/username live
-        var req = indexedDB.open('ti4', 1);
+        // Shared DB for the Board Game Assistant (all games read/write here)
+        var req = indexedDB.open('bg-assistant', 1);
         req.onupgradeneeded = function(e) {
           var d = e.target.result;
           if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings', { keyPath: 'k' });
           if (!d.objectStoreNames.contains('history'))  d.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
+          if (!d.objectStoreNames.contains('logs'))     d.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
         };
         req.onsuccess = function(e) { resolve(e.target.result); };
         req.onerror = function() { reject(); };
       });
     }
-    // Legacy fallback: if 'ti4' DB has nothing but 'ti4tracker' does (from earlier front-page setting),
-    // read from 'ti4tracker' as a backup and migrate over.
-    function openLegacyDB() {
-      return new Promise(function(resolve, reject) {
-        var req = indexedDB.open('ti4tracker', 3);
-        req.onupgradeneeded = function(e) {
-          var d = e.target.result;
-          if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings', { keyPath: 'k' });
-          if (!d.objectStoreNames.contains('history'))  d.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
-        };
-        req.onsuccess = function(e) { resolve(e.target.result); };
-        req.onerror = function() { reject(); };
-      });
-    }
-    function _dbGetRaw(dbHandle, store, key) {
-      return new Promise(function(resolve) {
-        try {
-          var r = dbHandle.transaction(store).objectStore(store).get(key);
-          r.onsuccess = function() { resolve(r.result); };
-          r.onerror = function() { resolve(null); };
-        } catch (e) { resolve(null); }
-      });
-    }
+    
     function dbGet(store, key) {
       return openDB().then(function(d) {
-        return _dbGetRaw(d, store, key).then(function(rec) {
-          if (rec !== undefined && rec !== null) return rec;
-          // Fall back to the legacy 'ti4tracker' DB and migrate if found
-          return openLegacyDB().then(function(d2) {
-            return _dbGetRaw(d2, store, key).then(function(legacyRec) {
-              if (legacyRec) {
-                // Migrate the value into the new DB so we only need this on first access
-                dbSet(store, legacyRec).catch(function(){});
-              }
-              return legacyRec;
-            });
-          }).catch(function() { return null; });
+        return new Promise(function(resolve) {
+          try {
+            var r = d.transaction(store).objectStore(store).get(key);
+            r.onsuccess = function() { resolve(r.result); };
+            r.onerror = function() { resolve(null); };
+          } catch (e) { resolve(null); }
         });
       });
     }

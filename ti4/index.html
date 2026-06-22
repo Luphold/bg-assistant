@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.135 -->
+<!-- TI4 Tracker 2.136 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -348,7 +348,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.135';
+var VERSION = '2.136';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -1647,7 +1647,7 @@ var db = null;
 function openDB() {
   return new Promise(function(resolve, reject) {
     if (db) { resolve(db); return; }
-    var req = indexedDB.open('ti4', 2);
+    var req = indexedDB.open('bg-assistant', 1);
     req.onupgradeneeded = function(e) {
       var d = e.target.result;
       if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings', { keyPath: 'k' });
