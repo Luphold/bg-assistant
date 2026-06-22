@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.5.1 - split status bar so room-code click doesn't overlap Supabase dot -->
+<!-- Board Game Assistant v1.5.2 - fix non-clickable Open Settings link in stats panel -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -497,7 +497,7 @@
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.5.1</div>
+      <div class="version">v1.5.2</div>
     </div>
     
   </div>
@@ -831,7 +831,7 @@
       return '<div class="stats-empty">No games recorded yet — stats will appear here once you finish your first game.</div>';
     }
     function statsNoSupabaseMessage() {
-      return '<div class="no-supabase">Stats need Supabase access. <a onclick="openSettings()">Open Settings</a> to enter your Supabase URL and key.</div>';
+      return '<div class="no-supabase">Stats need Supabase access. <a href="#" onclick="openSettings();return false;" style="cursor:pointer">Open Settings</a> to enter your Supabase URL and key.</div>';
     }
     
     function renderStatsFromRows(rows) {
