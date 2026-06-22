@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.4 - Supabase status indicator on front and TI4 -->
+<!-- Board Game Assistant v1.4.1 - compact status in header -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -276,6 +276,30 @@
       background: var(--panel);
       border: 1px solid var(--border);
     }
+    /* Compact status that lives in the header */
+    .supa-status-mini {
+      position: absolute;
+      top: 18px;
+      left: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      border-radius: 6px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      max-width: 140px;
+    }
+    .supa-status-mini .supa-text-mini {
+      color: var(--text-dim);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .supa-status-mini .supa-text-mini.ok { color: #2ecc71; }
+    .supa-status-mini .supa-text-mini.error { color: var(--red); }
     .supa-dot {
       width: 10px; height: 10px;
       border-radius: 50%;
@@ -409,6 +433,10 @@
     <div class="hdr">
       <h1>BOARD GAME ASSISTANT</h1>
       <div class="sub">Companion tools for tabletop nights</div>
+      <div class="supa-status-mini" id="supa-status">
+        <span class="supa-dot" id="supa-dot"></span>
+        <span class="supa-text-mini" id="supa-text">Checking…</span>
+      </div>
       <button class="gear-btn" id="btn-gear" title="Settings">⚙</button>
     </div>
     
@@ -463,17 +491,13 @@
     <button class="big-guest-btn" id="btn-guest">🎲 Join as Guest</button>
     
     <div class="section-h">Global Stats</div>
-    <div class="supa-status" id="supa-status">
-      <span class="supa-dot" id="supa-dot"></span>
-      <span id="supa-text">Checking Supabase…</span>
-    </div>
     <div class="stats-panel" id="stats-panel">
       <div class="stats-loading" id="stats-loading">Loading stats…</div>
     </div>
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.4.0</div>
+      <div class="version">v1.4.1</div>
     </div>
     
   </div>
@@ -912,7 +936,7 @@
     window.openSettings = openSettings;  // expose for inline link click
     
     // ===== Supabase status checker (runs every 30s) =====
-    function setSupaStatus(state, msg) {
+    function setSupaStatus(state, msg, fullMsg) {
       var dot = document.getElementById('supa-dot');
       var txt = document.getElementById('supa-text');
       dot.classList.remove('ok', 'error');
@@ -925,6 +949,8 @@
         txt.classList.add('error');
       }
       txt.textContent = msg;
+      // Full message is shown on hover/long-press via title attribute
+      document.getElementById('supa-status').title = fullMsg || msg;
     }
     
     function pingSupabase() {
@@ -932,30 +958,29 @@
         var url = results[0] && results[0].v;
         var key = results[1] && results[1].v;
         if (!url || !key) {
-          setSupaStatus('error', '❌ Supabase not configured — open ⚙ Settings to set up');
+          setSupaStatus('error', 'Not configured', 'Supabase not configured — open ⚙ Settings to set up');
           return;
         }
         return loadSupabase(url, key).then(function(client) {
           return client.from('bg_game_log').select('id').limit(1);
         }).then(function(r) {
           if (r.error) {
-            // Could be paused, table missing, or auth — report the message
             var m = r.error.message || 'unknown error';
             if (m.toLowerCase().indexOf('bg_game_log') >= 0 || m.toLowerCase().indexOf('not exist') >= 0) {
-              setSupaStatus('error', '❌ Supabase reachable, but bg_game_log table missing — run supabase-setup.sql');
+              setSupaStatus('error', 'Table missing', 'Supabase reachable, but bg_game_log table missing — run supabase-setup.sql');
             } else {
-              setSupaStatus('error', '❌ Supabase error: ' + m);
+              setSupaStatus('error', 'Error', 'Supabase error: ' + m);
             }
           } else {
-            setSupaStatus('ok', '✅ Supabase OK');
+            setSupaStatus('ok', 'Supabase OK', 'Supabase OK');
           }
         });
       }).catch(function(e) {
         var msg = (e && e.message) || 'unknown error';
         if (msg.toLowerCase().indexOf('fetch') >= 0) {
-          setSupaStatus('error', '❌ Supabase paused or unreachable — check your Supabase dashboard');
+          setSupaStatus('error', 'Paused/unreachable', 'Supabase paused or unreachable — check your Supabase dashboard');
         } else {
-          setSupaStatus('error', '❌ ' + msg);
+          setSupaStatus('error', 'Error', msg);
         }
       });
     }
