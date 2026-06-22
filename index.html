@@ -640,7 +640,9 @@
             return;
           }
           var entry = GUEST_ROOM_TABLES[idx++];
+          console.log('Guest search: trying', entry.table, 'for code', code);
           client.from(entry.table).select('room_code').eq('room_code', code).maybeSingle().then(function(r) {
+            console.log('Guest search result for', entry.table, ':', r);
             if (r.error || !r.data) {
               tryNext();
               return;

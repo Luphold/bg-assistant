@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.130 -->
+<!-- TI4 Tracker 2.131 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -337,7 +337,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.130';
+var VERSION = '2.131';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -5337,6 +5337,10 @@ function captureUsername() {
 
 function enterAsAdmin() {
   log('Entering as admin');
+  if (!supabase) {
+    alert('Supabase is still connecting — please wait a moment and try again.');
+    return;
+  }
   captureUsername();
   isAdmin = true;
   roomCode = generateRoomCode();
@@ -5347,7 +5351,13 @@ function enterAsAdmin() {
   // Persist room code locally so admin can resume
   dbSet('settings', { k: 'lastRoom', v: roomCode });
   enterGame();
-  pushState();
+  pushState().then(function(r) {
+    if (r && r.error) {
+      alert('Could not create the room in Supabase: ' + r.error.message + '\n\nGuests will not be able to join. Check your Supabase settings on the front page.');
+    } else {
+      log('Initial room push OK for ' + roomCode);
+    }
+  });
 }
 
 function resumeAsAdmin() {
@@ -5710,12 +5720,27 @@ function init() {
         document.getElementById('guest-auto').style.display = 'none';
       }
       
+      // Disable enter buttons until Supabase is ready (avoids silent push failures)
+      var btnAdmin = document.getElementById('btn-admin');
+      var btnGuestJoin = document.getElementById('btn-guest-join');
+      var btnResume = document.getElementById('btn-resume-admin');
+      if (btnAdmin) { btnAdmin.disabled = true; btnAdmin.textContent = 'Connecting…'; }
+      if (btnGuestJoin) { btnGuestJoin.disabled = true; btnGuestJoin.textContent = 'Connecting…'; }
+      
       initSupabase(url, key).then(function() {
+        log('Supabase ready');
+        if (btnAdmin) { btnAdmin.disabled = false; btnAdmin.textContent = 'Start New Game'; }
+        if (btnGuestJoin) { btnGuestJoin.disabled = false; btnGuestJoin.textContent = 'Join Game'; }
         if (!isGuestUrl) {
           // Only check resume in admin mode
           return checkResumableGame();
         }
-      }).catch(function(e) { log('Init Supabase failed: ' + e.message); });
+      }).catch(function(e) {
+        log('Init Supabase failed: ' + e.message);
+        alert('Could not connect to Supabase: ' + e.message + '\n\nPlease return to the Board Game Assistant front page and check your Supabase settings.');
+        if (btnAdmin) { btnAdmin.disabled = false; btnAdmin.textContent = 'Start New Game'; }
+        if (btnGuestJoin) { btnGuestJoin.disabled = false; btnGuestJoin.textContent = 'Join Game'; }
+      });
     } else {
       log('No saved credentials');
     }
