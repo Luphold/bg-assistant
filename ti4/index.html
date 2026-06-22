@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.134 -->
+<!-- TI4 Tracker 2.135 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -212,7 +212,8 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 <div id="status-bar" class="status-bar" style="position:sticky;top:0">
   <div style="display:flex;align-items:center;gap:6px;flex:1;z-index:1">
     <a href="../" class="btn btn-sm" style="background:none;border:1px solid var(--border2);color:var(--text-dim);font-size:14px;padding:4px 8px;border-radius:6px;text-decoration:none;line-height:1" title="Back to Board Game Assistant front page">⮌</a>
-    <div onclick="showRoomCode()" style="cursor:pointer;display:flex;align-items:center;gap:6px"><span class="small gold" id="room-display">Room: —</span><span class="conn-dot" id="conn-dot" title="Supabase status"></span><span class="small" id="supa-text" style="font-size:10px;color:var(--text-dim);letter-spacing:.05em">…</span></div>
+    <span onclick="showRoomCode()" class="small gold" id="room-display" style="cursor:pointer">Room: —</span>
+    <span style="display:inline-flex;align-items:center;gap:4px"><span class="conn-dot" id="conn-dot" title="Supabase status"></span><span class="small" id="supa-text" style="font-size:10px;color:var(--text-dim);letter-spacing:.05em">…</span></span>
   </div>
   <div style="display:flex;align-items:baseline;gap:8px">
     <div class="round-display" id="round-display">Round 1</div>
@@ -347,7 +348,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.134';
+var VERSION = '2.135';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
