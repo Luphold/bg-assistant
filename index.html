@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v1.7 - localStorage shadow handles objects via JSON, resume diagnostics -->
+<!-- Board Game Assistant v1.7.2 - cleanup: remove diagnostic UI and console.log spam -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -497,7 +497,7 @@
     
     <div class="footer">
       Board Game Assistant
-      <div class="version">v1.7.0</div>
+      <div class="version">v1.7.2</div>
     </div>
     
   </div>
@@ -756,9 +756,7 @@
             return;
           }
           var entry = GUEST_ROOM_TABLES[idx++];
-          console.log('Guest search: trying', entry.table, 'for code', code);
           client.from(entry.table).select('room_code').eq('room_code', code).maybeSingle().then(function(r) {
-            console.log('Guest search result for', entry.table, ':', r);
             if (r.error || !r.data) {
               tryNext();
               return;
@@ -790,17 +788,14 @@
       if (!url.match(/^https:\/\//)) { alert('URL must start with https://'); return; }
       var btn = this;
       btn.disabled = true; btn.textContent = 'Saving...';
-      console.log('[bg-assistant] Save: writing settings to IndexedDB');
       // Save first — credentials always get persisted regardless of network outcome
       Promise.all([
         dbSet('settings', { k: 'url', v: url }),
         dbSet('settings', { k: 'key', v: key })
-      ]).then(function(results) {
-        console.log('[bg-assistant] Save: dbSet results =', results);
+      ]).then(function() {
         // Verify by reading back
         return Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]);
       }).then(function(verify) {
-        console.log('[bg-assistant] Save: read-back =', verify);
         if (!verify[0] || verify[0].v !== url) {
           throw new Error('Settings did not save correctly (url read-back failed)');
         }
@@ -808,19 +803,14 @@
         btn.textContent = 'Validating...';
         return loadSupabase(url, key).then(function(c) {
           return c.from('bg_game_log').select('id').limit(1).catch(function(){return null;});
-        }).catch(function(e) {
-          console.log('[bg-assistant] Save: connection validation soft-failed:', e);
-          return null;
-        });
+        }).catch(function() { return null; });
       }).then(function() {
-        console.log('[bg-assistant] Save: complete');
         closeSettings();
         initStats();
-        pingSupabase(); // refresh the status indicator immediately
+        pingSupabase();
         btn.disabled = false; btn.textContent = 'Save';
       }).catch(function(e) {
-        console.error('[bg-assistant] Save error:', e);
-        alert('Save failed: ' + (e && e.message ? e.message : 'unknown error') + '\n\nCheck the browser console for details.');
+        alert('Save failed: ' + (e && e.message ? e.message : 'unknown error'));
         btn.disabled = false; btn.textContent = 'Save';
       });
     });

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.141 -->
+<!-- TI4 Tracker 2.143 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -160,7 +160,6 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
         Supabase isn't configured yet.<br><br>
         Open the <b>Board Game Assistant</b> front page to set up your Supabase URL and key.
       </div>
-      <div id="diagnostic" style="margin-top:12px;padding:10px;background:rgba(36,50,84,0.4);border:1px solid rgba(212,172,13,0.2);border-radius:6px;font-family:monospace;font-size:10px;color:var(--text-dim);word-break:break-all"></div>
       <a href="../" class="btn btn-primary btn-full mt-8" style="text-decoration:none;text-align:center">⮌ Back to Front Page</a>
       <button id="btn-reset" class="btn btn-full mt-8">↺ Clear Cache & Reload</button>
     </div>
@@ -168,7 +167,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
     <div id="login-form" style="display:none">
       <label>Username</label>
       <input id="inp-username" type="text" placeholder="Your display name" maxlength="20">
-      <div class="small dim" id="url-display" style="margin-top:8px"></div>
+      <div id="url-display" style="display:none"></div>
       
       <!-- Admin path: shown when URL has ?admin=1 (or no flag) -->
       <div id="admin-chooser" style="display:none">
@@ -349,7 +348,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.141';
+var VERSION = '2.143';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -5939,32 +5938,6 @@ function init() {
       }
     } catch (e) {}
     
-    // Diagnostic — shown in setup-form so we can see exactly what TI4 found
-    var diag = document.getElementById('diagnostic');
-    if (diag) {
-      var info = [];
-      info.push('TI4 read result (after fallback):');
-      info.push('  url: ' + (url ? 'YES (' + url.substring(0, 30) + '…)' : 'null'));
-      info.push('  key: ' + (key ? 'YES (' + key.substring(0, 15) + '…)' : 'null'));
-      info.push('  username: ' + (username || 'null'));
-      info.push('');
-      info.push('Direct localStorage check:');
-      try {
-        info.push('  bg-settings:url = ' + (localStorage.getItem('bg-settings:url') ? 'present' : 'MISSING'));
-        info.push('  bg-settings:key = ' + (localStorage.getItem('bg-settings:key') ? 'present' : 'MISSING'));
-        info.push('  bg_username = ' + (localStorage.getItem('bg_username') || 'MISSING'));
-      } catch (e) {
-        info.push('  localStorage error: ' + e.message);
-      }
-      diag.textContent = info.join('\n');
-    }
-    
-    if (!username) {
-      try {
-        var shared = localStorage.getItem('bg_username');
-        if (shared) username = shared;
-      } catch (e) { /* ignore */ }
-    }
     if (username) {
       myUsername = username;
       var u = document.getElementById('inp-username');
