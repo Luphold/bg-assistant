@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Yatzy Scorecard 1.4.2 -->
+<!-- Yatzy Scorecard 1.4.3 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -36,7 +36,7 @@
       line-height: 1.4;
       font-size: 14px;
     }
-    .container { max-width: 720px; margin: 0 auto; padding: 12px; }
+    .container { max-width: 480px; margin: 0 auto; padding: 12px; }
     
     /* Header */
     .hdr { position: relative; padding: 18px 8px 14px; text-align: center; border-bottom: 1px solid var(--border); }
@@ -119,7 +119,7 @@
       line-height: 1.1;
     }
     .score-table th { background: var(--header-bg); color: var(--header-text); font-weight: 600; letter-spacing: .04em; font-size: 14px; padding: 8px 4px; }
-    .score-table th.cat-header { text-align: left; width: 55%; padding-left: 14px; font-size: 12px; }
+    .score-table th.cat-header { text-align: left; width: 30%; padding-left: 14px; font-size: 12px; }
     .score-table td.cat-name { text-align: left; padding-left: 14px; font-weight: 500; color: var(--text); font-size: 14px; }
     .score-table td.cat-hint { text-align: left; padding-left: 14px; }
     .score-table td.cat-hint .hint-line { font-size: 10px; color: var(--text-dim); margin-top: 1px; font-style: italic; }
@@ -322,7 +322,7 @@
     @media (max-width: 600px) {
       .score-table th, .score-table td { padding: 3px 2px; font-size: 18px; }
       .score-table th { padding: 6px 2px; }
-      .score-table th.cat-header, .score-table td.cat-name { width: 55%; padding-left: 8px; font-size: 11px; }
+      .score-table th.cat-header, .score-table td.cat-name { width: 30%; padding-left: 8px; font-size: 11px; }
       .score-table tr.row-total td { font-size: 19px; }
       .score-table tr.row-bonus td { font-size: 16px; }
       .hdr h1 { font-size: 18px; }
@@ -394,7 +394,7 @@
     
     <div class="footer">
       Yatzy Scorecard
-      <div class="version">v1.4.2</div>
+      <div class="version">v1.4.3</div>
     </div>
   </div>
   
@@ -407,7 +407,7 @@
     // =============================================================================
     // SWEDISH YATZY — Category definitions
     // =============================================================================
-    var VERSION = '1.4.2';
+    var VERSION = '1.4.3';
     
     var CATEGORIES = [
       { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
