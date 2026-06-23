@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Yatzy Scorecard 1.2 -->
+<!-- Yatzy Scorecard 1.3 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -339,6 +339,21 @@
     
     <!-- Setup screen -->
     <div id="screen-setup" class="screen active">
+      <div id="resume-banner" style="display:none">
+        <div class="panel" style="border-color:var(--accent);background:var(--accent-soft)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:24px">↺</div>
+            <div style="flex:1">
+              <div style="font-weight:600">Game in progress</div>
+              <div class="dim small" id="resume-detail">Tap Resume to continue</div>
+            </div>
+          </div>
+          <div class="action-bar" style="margin-top:10px">
+            <button class="btn primary" id="btn-resume">Resume Game</button>
+            <button class="btn danger" id="btn-discard-resume">Discard</button>
+          </div>
+        </div>
+      </div>
       <div class="section-title">Players (2-5)</div>
       <div class="panel">
         <div id="player-inputs"></div>
@@ -374,7 +389,7 @@
     
     <div class="footer">
       Yatzy Scorecard
-      <div class="version">v1.2.0</div>
+      <div class="version">v1.3.0</div>
     </div>
   </div>
   
@@ -387,7 +402,7 @@
     // =============================================================================
     // SWEDISH YATZY — Category definitions
     // =============================================================================
-    var VERSION = '1.2.0';
+    var VERSION = '1.3.0';
     
     var CATEGORIES = [
       { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
@@ -423,6 +438,50 @@
     
     var supabase = null;
     var STORAGE_KEY_DB = 'bg-assistant';
+    
+    // -------------------------------------------------------------
+    // Local persistence (localStorage) — survives page refresh
+    //   yatzy-players : last used player name list (default for new games)
+    //   yatzy-state   : in-progress game snapshot (cleared on End / Cancel)
+    // -------------------------------------------------------------
+    var LS_PLAYERS = 'bg-settings:yatzy-players';
+    var LS_STATE   = 'bg-settings:yatzy-state';
+    
+    function saveLastPlayerNames() {
+      try {
+        var names = (state.players || []).map(function(p) { return p.name; });
+        if (!names.length) names = window._setupNames || [];
+        if (names.length >= 2) localStorage.setItem(LS_PLAYERS, JSON.stringify(names));
+      } catch (e) {}
+    }
+    function loadLastPlayerNames() {
+      try {
+        var raw = localStorage.getItem(LS_PLAYERS);
+        if (!raw) return null;
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length >= 2) return arr;
+      } catch (e) {}
+      return null;
+    }
+    
+    function saveGameState() {
+      if (!state.started || state.ended) return;
+      try {
+        localStorage.setItem(LS_STATE, JSON.stringify(state));
+      } catch (e) {}
+    }
+    function loadSavedGameState() {
+      try {
+        var raw = localStorage.getItem(LS_STATE);
+        if (!raw) return null;
+        var s = JSON.parse(raw);
+        if (s && s.started && !s.ended && Array.isArray(s.players) && s.players.length >= 2) return s;
+      } catch (e) {}
+      return null;
+    }
+    function clearGameState() {
+      try { localStorage.removeItem(LS_STATE); } catch (e) {}
+    }
     
     // =============================================================================
     // IndexedDB + localStorage shadow (same pattern as TI4)
@@ -540,7 +599,9 @@
       var c = document.getElementById('player-inputs');
       c.innerHTML = '';
       var defaults = ['Player 1', 'Player 2'];
-      var names = window._setupNames || defaults.slice();
+      // Use saved names from previous game session if available
+      var savedNames = loadLastPlayerNames();
+      var names = window._setupNames || (savedNames ? savedNames.slice() : defaults.slice());
       while (names.length < 2) names.push('Player ' + (names.length + 1));
       window._setupNames = names;
       
@@ -558,6 +619,8 @@
         inp.addEventListener('input', function() {
           var idx = parseInt(this.getAttribute('data-idx'), 10);
           window._setupNames[idx] = this.value;
+          // Persist immediately so refresh keeps names
+          try { localStorage.setItem(LS_PLAYERS, JSON.stringify(window._setupNames)); } catch (e) {}
         });
       });
       c.querySelectorAll('.remove').forEach(function(btn) {
@@ -601,6 +664,8 @@
       state.ended = false;
       state.startTime = new Date().toISOString();
       state.endTime = null;
+      saveLastPlayerNames();
+      saveGameState();
       showScreen('screen-game');
       renderScorecard();
     });
@@ -1098,6 +1163,7 @@
       }
       
       renderScorecard();
+      saveGameState();
     }
     
     function advanceTurn() {
@@ -1129,25 +1195,17 @@
     // END GAME
     // =============================================================================
     document.getElementById('btn-end-game').addEventListener('click', function() {
-      // Check that every cell is filled (or at least the user confirmed)
+      // Check that every cell is filled — if not, refuse to end
       var unfilled = 0;
       state.players.forEach(function(p) {
         CATEGORIES.forEach(function(c) {
           if (p.scores[c.key] === null || p.scores[c.key] === undefined) unfilled++;
         });
       });
-      var proceed = true;
       if (unfilled > 0) {
-        proceed = confirm(unfilled + ' score cell(s) are still empty. End game anyway?\n\n(Empty cells count as 0.)');
+        alert(unfilled + ' score cell' + (unfilled === 1 ? '' : 's') + ' still empty.\n\nFill all cells before ending the game, or tap Cancel Game to abandon it.');
+        return;
       }
-      if (!proceed) return;
-      
-      // Fill remaining empties with 0
-      state.players.forEach(function(p) {
-        CATEGORIES.forEach(function(c) {
-          if (p.scores[c.key] === null || p.scores[c.key] === undefined) p.scores[c.key] = 0;
-        });
-      });
       
       state.ended = true;
       state.endTime = new Date().toISOString();
@@ -1187,16 +1245,24 @@
         }).catch(function(){});
       }
       
+      // Persist player names (but clear in-progress state)
+      saveLastPlayerNames();
+      clearGameState();
+      
       // Show results modal
       showResultsModal(historyEntry);
     });
     
     document.getElementById('btn-cancel-game').addEventListener('click', function() {
       if (!confirm('Cancel game without saving?')) return;
+      // Preserve player names but wipe game state
+      saveLastPlayerNames();
+      clearGameState();
       state.started = false;
       state.ended = false;
       state.players = [];
-      window._setupNames = ['Player 1', 'Player 2'];
+      // Re-seed setup names from what we just saved
+      window._setupNames = loadLastPlayerNames() || ['Player 1', 'Player 2'];
       showScreen('screen-setup');
       renderPlayerInputs();
     });
@@ -1226,10 +1292,11 @@
       document.getElementById('score-modal-overlay').classList.add('open');
       document.getElementById('btn-results-done').addEventListener('click', function() {
         closeScoreModal();
+        clearGameState();
         state.started = false;
         state.ended = false;
         state.players = [];
-        window._setupNames = ['Player 1', 'Player 2'];
+        window._setupNames = loadLastPlayerNames() || ['Player 1', 'Player 2'];
         showScreen('screen-setup');
         renderPlayerInputs();
       });
@@ -1320,9 +1387,53 @@
     }
     
     // =============================================================================
+    // RESUME (load in-progress game from localStorage)
+    // =============================================================================
+    function checkForResume() {
+      var saved = loadSavedGameState();
+      var banner = document.getElementById('resume-banner');
+      if (!saved) {
+        banner.style.display = 'none';
+        return;
+      }
+      banner.style.display = '';
+      // Detail line: how many cells filled, when started
+      var filled = 0;
+      var total = saved.players.length * CATEGORIES.length;
+      saved.players.forEach(function(p) {
+        CATEGORIES.forEach(function(c) {
+          if (p.scores[c.key] !== null && p.scores[c.key] !== undefined) filled++;
+        });
+      });
+      var when = '';
+      try {
+        var t = new Date(saved.startTime);
+        when = ' · started ' + t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      } catch (e) {}
+      document.getElementById('resume-detail').textContent =
+        saved.players.length + ' players · ' + filled + '/' + total + ' cells filled' + when;
+    }
+    
+    document.getElementById('btn-resume').addEventListener('click', function() {
+      var saved = loadSavedGameState();
+      if (!saved) return;
+      // Restore state
+      state = saved;
+      showScreen('screen-game');
+      renderScorecard();
+    });
+    
+    document.getElementById('btn-discard-resume').addEventListener('click', function() {
+      if (!confirm('Discard the in-progress game? This cannot be undone.')) return;
+      clearGameState();
+      checkForResume();
+    });
+    
+    // =============================================================================
     // INIT
     // =============================================================================
     renderPlayerInputs();
+    checkForResume();
     initSupabase();
     
     // Service worker
