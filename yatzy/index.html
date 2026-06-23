@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Yatzy Scorecard 1.1 -->
+<!-- Yatzy Scorecard 1.2 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -199,8 +199,9 @@
     .modal-overlay.open { display: flex; }
     .modal {
       background: var(--panel); border: 1px solid var(--border);
-      border-radius: 10px; padding: 20px; max-width: 360px; width: 92%;
+      border-radius: 10px; padding: 20px; max-width: 440px; width: 94%;
       box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-height: 90vh; overflow-y: auto;
     }
     .modal h3 { margin: 0 0 8px; font-size: 16px; }
     .modal .cat-detail { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; font-style: italic; }
@@ -215,6 +216,90 @@
     .modal .quick-btn.zero { background: var(--panel); border-color: var(--red); color: var(--red); }
     .modal .modal-buttons { display: flex; gap: 8px; margin-top: 12px; }
     .modal .modal-buttons .btn { flex: 1; }
+    
+    /* Modal picker rows */
+    .picker-instructions { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 8px; font-style: italic; }
+    .picker-rows { display: flex; flex-direction: column; gap: 5px; margin: 8px 0 12px; }
+    .picker-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--panel); cursor: pointer;
+      transition: background .12s, border-color .12s;
+    }
+    .picker-row:not(.picker-row-static):hover {
+      background: var(--accent-soft); border-color: var(--accent);
+    }
+    .picker-row.picker-skip { border-style: dashed; }
+    .picker-row.picker-skip:hover { background: #fbeceb; border-color: var(--red); }
+    .picker-row-static { cursor: default; justify-content: center; }
+    .picker-row-static:hover { background: var(--panel); border-color: var(--border); }
+    .picker-dice {
+      flex: 1; display: flex; gap: 4px; align-items: center; justify-content: flex-start;
+      flex-wrap: wrap; min-height: 30px;
+    }
+    .picker-skip-label { color: var(--text-dim); font-style: italic; font-size: 13px; justify-content: center; }
+    .picker-score {
+      min-width: 36px; text-align: right; font-weight: 700; font-size: 16px; color: var(--text);
+    }
+    
+    /* Two-column picker for 2 Pairs / Full House */
+    .picker-2col {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0;
+    }
+    .picker-col { display: flex; flex-direction: column; gap: 4px; }
+    .picker-col-label {
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-dim); text-align: center; margin-bottom: 4px;
+    }
+    .picker-row.picker-sub {
+      padding: 5px 8px; gap: 4px;
+    }
+    .picker-row.picker-sub .picker-dice { gap: 3px; }
+    .picker-row.selected {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .picker-row.selected .picker-dice svg rect { fill: rgba(255,255,255,0.95); }
+    .picker-row.disabled {
+      opacity: 0.35; cursor: not-allowed; background: var(--row-alt);
+    }
+    .picker-row.disabled:hover { background: var(--row-alt); border-color: var(--border); }
+    
+    .picker-total-row {
+      text-align: center; padding: 8px 0; border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .picker-total {
+      display: inline-block; font-size: 24px; font-weight: 700; color: var(--text);
+      min-width: 50px; padding: 4px 12px;
+    }
+    .picker-action-row { display: flex; gap: 8px; margin-top: 10px; }
+    .picker-action-row .btn { flex: 1; }
+    
+    /* Chance picker */
+    .picker-chance-row {
+      display: flex; gap: 8px; justify-content: center; margin: 12px 0;
+    }
+    .picker-die-tappable {
+      cursor: pointer; padding: 4px; border-radius: 6px;
+      transition: background .12s;
+    }
+    .picker-die-tappable:hover { background: var(--accent-soft); }
+    .picker-die-tappable:active { transform: scale(0.95); }
+    
+    /* Yatzy big label */
+    .yatzy-label {
+      font-size: 36px; font-weight: 900; letter-spacing: .15em;
+      color: var(--red); text-align: center; padding: 14px 0;
+    }
+    
+    /* Scale picker dice down a bit on small screens */
+    @media (max-width: 600px) {
+      .picker-dice svg { width: 22px !important; height: 22px !important; }
+      .picker-row { padding: 7px 10px; }
+      .picker-score { font-size: 14px; }
+      .picker-die-tappable svg { width: 38px !important; height: 38px !important; }
+      .picker-2col .picker-dice svg { width: 18px !important; height: 18px !important; }
+    }
     
     /* History/stats */
     .stats-row {
@@ -289,7 +374,7 @@
     
     <div class="footer">
       Yatzy Scorecard
-      <div class="version">v1.1.0</div>
+      <div class="version">v1.2.0</div>
     </div>
   </div>
   
@@ -302,7 +387,7 @@
     // =============================================================================
     // SWEDISH YATZY — Category definitions
     // =============================================================================
-    var VERSION = '1.1.0';
+    var VERSION = '1.2.0';
     
     var CATEGORIES = [
       { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
@@ -678,80 +763,310 @@
       var modal = document.getElementById('score-modal');
       
       var h = '<h3>' + escapeHtml(cat.name) + ' — ' + escapeHtml(p.name) + '</h3>';
-      h += '<div class="cat-detail">' + escapeHtml(cat.hint) + ' · Max ' + cat.max + '</div>';
+      h += '<div id="picker-body">' + buildPickerBody(cat) + '</div>';
       
-      // Quick buttons for likely values
-      var quicks = buildQuickButtons(cat);
-      h += '<div class="quick-row">';
-      quicks.forEach(function(q) {
-        h += '<button class="quick-btn' + (q === 0 ? ' zero' : '') + '" data-val="' + q + '">' + q + '</button>';
-      });
-      h += '</div>';
-      
-      h += '<input type="number" class="score-input" id="score-input" inputmode="numeric" min="0" max="' + cat.max + '" value="' + (current != null ? current : '') + '" placeholder="Enter score">';
-      
-      h += '<div class="modal-buttons">';
+      h += '<div class="modal-buttons" id="modal-bottom-row">';
       h += '<button class="btn" id="btn-modal-cancel">Cancel</button>';
       if (current != null) h += '<button class="btn danger" id="btn-modal-clear">Clear</button>';
-      h += '<button class="btn primary" id="btn-modal-save">Save</button>';
       h += '</div>';
       
       modal.innerHTML = h;
       document.getElementById('score-modal-overlay').classList.add('open');
-      setTimeout(function() {
-        var inp = document.getElementById('score-input');
-        if (inp) inp.focus();
-      }, 50);
       
-      // Wire buttons
-      modal.querySelectorAll('.quick-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-          var v = parseInt(this.getAttribute('data-val'), 10);
-          saveScore(v);
-        });
-      });
+      // Wire cancel/clear
       document.getElementById('btn-modal-cancel').addEventListener('click', closeScoreModal);
-      document.getElementById('btn-modal-save').addEventListener('click', function() {
-        var inp = document.getElementById('score-input');
-        var raw = inp.value.trim();
-        if (raw === '') { closeScoreModal(); return; }
-        var v = parseInt(raw, 10);
-        if (isNaN(v) || v < 0 || v > cat.max) {
-          alert('Enter a number between 0 and ' + cat.max + '.');
-          return;
-        }
-        saveScore(v);
-      });
       var clearBtn = document.getElementById('btn-modal-clear');
       if (clearBtn) clearBtn.addEventListener('click', function() {
-        var p = state.players[_currentEditCell.playerIdx];
-        p.scores[_currentEditCell.catKey] = null;
+        p.scores[catKey] = null;
         closeScoreModal();
         renderScorecard();
       });
-      // Enter to save
-      document.getElementById('score-input').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') document.getElementById('btn-modal-save').click();
-      });
+      
+      // Wire the category-specific picker after it's in DOM
+      wirePicker(cat);
     }
     
-    function buildQuickButtons(cat) {
-      // Generate sensible quick-tap values for each category
-      if (cat.fixed) return [0, cat.fixed];
-      switch (cat.key) {
-        case 'ones':   return [0, 1, 2, 3, 4, 5];
-        case 'twos':   return [0, 2, 4, 6, 8, 10];
-        case 'threes': return [0, 3, 6, 9, 12, 15];
-        case 'fours':  return [0, 4, 8, 12, 16, 20];
-        case 'fives':  return [0, 5, 10, 15, 20, 25];
-        case 'sixes':  return [0, 6, 12, 18, 24, 30];
-        case 'pair':   return [0, 2, 4, 6, 8, 10, 12];
-        case 'twoPair':return [0, 6, 10, 14, 18, 22];
-        case 'three':  return [0, 3, 6, 9, 12, 15, 18];
-        case 'four':   return [0, 4, 8, 12, 16, 20, 24];
-        case 'house':  return [0, 8, 12, 16, 20, 24, 28];
-        case 'chance': return [0, 5, 10, 15, 20, 25, 30];
-        default: return [0];
+    // -------------------------------------------------------------
+    // Picker body builders — category-specific UI
+    // -------------------------------------------------------------
+    function buildPickerBody(cat) {
+      if (cat.group === 'upper') return buildUpperPicker(cat);
+      if (cat.key === 'pair') return buildSinglePairPicker();
+      if (cat.key === 'three') return buildOfAKindPicker(3);
+      if (cat.key === 'four') return buildOfAKindPicker(4);
+      if (cat.key === 'twoPair') return buildTwoPairsPicker();
+      if (cat.key === 'house') return buildFullHousePicker();
+      if (cat.key === 'smallSt') return buildFixedPicker(15, 'Sm. Straight', [1,2,3,4,5]);
+      if (cat.key === 'largeSt') return buildFixedPicker(20, 'Lg. Straight', [2,3,4,5,6]);
+      if (cat.key === 'yatzy') return buildYatzyPicker();
+      if (cat.key === 'chance') return buildChancePicker();
+      return '<div class="dim">Unsupported category</div>';
+    }
+    
+    function diceGroup(n, count) {
+      var html = '';
+      for (var i = 0; i < count; i++) html += diceSvg(n);
+      return html;
+    }
+    
+    // Upper: 5 rows of N copies of the same die
+    function buildUpperPicker(cat) {
+      var n = cat.dice;
+      var h = '<div class="picker-rows">';
+      for (var count = 1; count <= 5; count++) {
+        var score = n * count;
+        h += '<div class="picker-row" data-score="' + score + '">';
+        h += '<div class="picker-dice">' + diceGroup(n, count) + '</div>';
+        h += '<div class="picker-score">' + score + '</div>';
+        h += '</div>';
+      }
+      // 0 / skip option
+      h += '<div class="picker-row picker-skip" data-score="0">';
+      h += '<div class="picker-dice picker-skip-label">— skip / 0 —</div>';
+      h += '<div class="picker-score">0</div>';
+      h += '</div>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Pair: 6 rows, one for each dice value (1+1, 2+2, ... 6+6)
+    function buildSinglePairPicker() {
+      var h = '<div class="picker-rows">';
+      for (var n = 1; n <= 6; n++) {
+        var score = n * 2;
+        h += '<div class="picker-row" data-score="' + score + '">';
+        h += '<div class="picker-dice">' + diceGroup(n, 2) + '</div>';
+        h += '<div class="picker-score">' + score + '</div>';
+        h += '</div>';
+      }
+      h += '<div class="picker-row picker-skip" data-score="0">';
+      h += '<div class="picker-dice picker-skip-label">— skip / 0 —</div>';
+      h += '<div class="picker-score">0</div>';
+      h += '</div>';
+      h += '</div>';
+      return h;
+    }
+    
+    // 3 of a kind / 4 of a kind: 6 rows of N copies
+    function buildOfAKindPicker(count) {
+      var h = '<div class="picker-rows">';
+      for (var n = 1; n <= 6; n++) {
+        var score = n * count;
+        h += '<div class="picker-row" data-score="' + score + '">';
+        h += '<div class="picker-dice">' + diceGroup(n, count) + '</div>';
+        h += '<div class="picker-score">' + score + '</div>';
+        h += '</div>';
+      }
+      h += '<div class="picker-row picker-skip" data-score="0">';
+      h += '<div class="picker-dice picker-skip-label">— skip / 0 —</div>';
+      h += '<div class="picker-score">0</div>';
+      h += '</div>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Two pairs: two columns, each with 6 selectable rows (1+1 ... 6+6).
+    // Picking from one column disables the same number in the other.
+    function buildTwoPairsPicker() {
+      var h = '<div class="picker-instructions">Pick one from each column — different numbers</div>';
+      h += '<div class="picker-2col">';
+      for (var col = 0; col < 2; col++) {
+        var colLabel = col === 0 ? 'First pair' : 'Second pair';
+        h += '<div class="picker-col">';
+        h += '<div class="picker-col-label">' + colLabel + '</div>';
+        for (var n = 1; n <= 6; n++) {
+          h += '<div class="picker-row picker-sub" data-col="' + col + '" data-n="' + n + '">';
+          h += '<div class="picker-dice">' + diceGroup(n, 2) + '</div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+      h += '<div class="picker-total-row"><div class="picker-total" id="picker-total">–</div></div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" id="btn-2p-confirm" disabled>Confirm</button>';
+      h += '<button class="btn" id="btn-2p-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Full house: column 1 = three of a kind (1+1+1 ... 6+6+6), column 2 = pair (1+1 ... 6+6)
+    function buildFullHousePicker() {
+      var h = '<div class="picker-instructions">Pick the triplet and the pair — different numbers</div>';
+      h += '<div class="picker-2col">';
+      for (var col = 0; col < 2; col++) {
+        var colLabel = col === 0 ? 'Three of' : 'Pair of';
+        var count = col === 0 ? 3 : 2;
+        h += '<div class="picker-col">';
+        h += '<div class="picker-col-label">' + colLabel + '</div>';
+        for (var n = 1; n <= 6; n++) {
+          h += '<div class="picker-row picker-sub" data-col="' + col + '" data-n="' + n + '" data-count="' + count + '">';
+          h += '<div class="picker-dice">' + diceGroup(n, count) + '</div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+      h += '<div class="picker-total-row"><div class="picker-total" id="picker-total">–</div></div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" id="btn-fh-confirm" disabled>Confirm</button>';
+      h += '<button class="btn" id="btn-fh-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Straight: single row showing the straight, score / skip buttons
+    function buildFixedPicker(score, label, diceArr) {
+      var h = '<div class="picker-rows">';
+      h += '<div class="picker-row picker-row-static">';
+      h += '<div class="picker-dice">';
+      diceArr.forEach(function(d) { h += diceSvg(d); });
+      h += '</div>';
+      h += '</div>';
+      h += '</div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" data-score="' + score + '" id="btn-fixed-score">Score ' + score + '</button>';
+      h += '<button class="btn" data-score="0" id="btn-fixed-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Yatzy: just a big red YATZY label + Score 50 / Skip
+    function buildYatzyPicker() {
+      var h = '<div class="picker-rows">';
+      h += '<div class="picker-row picker-row-static">';
+      h += '<div class="yatzy-label">YATZY</div>';
+      h += '</div>';
+      h += '</div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" data-score="50" id="btn-fixed-score">Score 50</button>';
+      h += '<button class="btn" data-score="0" id="btn-fixed-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Chance: 5 dice icons that cycle 1→6 on tap, live total, skip option
+    function buildChancePicker() {
+      var h = '<div class="picker-instructions">Tap each die to cycle 1→6</div>';
+      h += '<div class="picker-chance-row" id="chance-dice">';
+      for (var i = 0; i < 5; i++) {
+        h += '<div class="picker-die-tappable" data-idx="' + i + '" data-val="1">' + diceSvg(1) + '</div>';
+      }
+      h += '</div>';
+      h += '<div class="picker-total-row"><div class="picker-total" id="picker-total">5</div></div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" id="btn-chance-confirm">Confirm</button>';
+      h += '<button class="btn" id="btn-chance-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // -------------------------------------------------------------
+    // Picker wiring
+    // -------------------------------------------------------------
+    function wirePicker(cat) {
+      var body = document.getElementById('picker-body');
+      
+      // Single-tap rows that immediately save a score (upper, single pair, of-a-kind)
+      var directKeys = ['ones','twos','threes','fours','fives','sixes','pair','three','four'];
+      if (directKeys.indexOf(cat.key) >= 0) {
+        body.querySelectorAll('.picker-row[data-score]').forEach(function(row) {
+          row.addEventListener('click', function() {
+            var s = parseInt(this.getAttribute('data-score'), 10);
+            saveScore(s);
+          });
+        });
+        return;
+      }
+      
+      // Two pairs / Full house — pick one from each column then Confirm
+      if (cat.key === 'twoPair' || cat.key === 'house') {
+        var selected = { 0: null, 1: null }; // n values picked per column
+        var rows = body.querySelectorAll('.picker-row.picker-sub');
+        function refresh() {
+          rows.forEach(function(r) {
+            var col = parseInt(r.getAttribute('data-col'), 10);
+            var n = parseInt(r.getAttribute('data-n'), 10);
+            r.classList.remove('selected', 'disabled');
+            if (selected[col] === n) r.classList.add('selected');
+            // Disable the same number in the opposite column
+            var otherCol = 1 - col;
+            if (selected[otherCol] === n) r.classList.add('disabled');
+          });
+          // Update total and confirm
+          var totalEl = document.getElementById('picker-total');
+          var confirmBtn = document.getElementById(cat.key === 'twoPair' ? 'btn-2p-confirm' : 'btn-fh-confirm');
+          if (selected[0] != null && selected[1] != null) {
+            var total;
+            if (cat.key === 'twoPair') {
+              // Two pairs scored as the sum of all 4 dice
+              total = selected[0] * 2 + selected[1] * 2;
+            } else {
+              // Full house = 3 of a kind sum + pair sum
+              total = selected[0] * 3 + selected[1] * 2;
+            }
+            totalEl.textContent = total;
+            confirmBtn.disabled = false;
+            confirmBtn.setAttribute('data-score', total);
+          } else {
+            totalEl.textContent = '–';
+            confirmBtn.disabled = true;
+          }
+        }
+        rows.forEach(function(r) {
+          r.addEventListener('click', function() {
+            if (this.classList.contains('disabled')) return;
+            var col = parseInt(this.getAttribute('data-col'), 10);
+            var n = parseInt(this.getAttribute('data-n'), 10);
+            // Toggle: tap again to deselect
+            if (selected[col] === n) selected[col] = null;
+            else selected[col] = n;
+            refresh();
+          });
+        });
+        var confirmBtn = document.getElementById(cat.key === 'twoPair' ? 'btn-2p-confirm' : 'btn-fh-confirm');
+        confirmBtn.addEventListener('click', function() {
+          var s = parseInt(this.getAttribute('data-score'), 10);
+          if (!isNaN(s)) saveScore(s);
+        });
+        var skipBtn = document.getElementById(cat.key === 'twoPair' ? 'btn-2p-skip' : 'btn-fh-skip');
+        skipBtn.addEventListener('click', function() { saveScore(0); });
+        return;
+      }
+      
+      // Straights + Yatzy — Score/Skip buttons each with data-score
+      if (cat.key === 'smallSt' || cat.key === 'largeSt' || cat.key === 'yatzy') {
+        body.querySelectorAll('button[data-score]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var s = parseInt(this.getAttribute('data-score'), 10);
+            saveScore(s);
+          });
+        });
+        return;
+      }
+      
+      // Chance — tappable dice + Confirm + Skip
+      if (cat.key === 'chance') {
+        var diceVals = [1, 1, 1, 1, 1];
+        var diceEls = body.querySelectorAll('.picker-die-tappable');
+        function updateTotal() {
+          var sum = diceVals.reduce(function(a,b){return a+b;}, 0);
+          document.getElementById('picker-total').textContent = sum;
+        }
+        diceEls.forEach(function(d, idx) {
+          d.addEventListener('click', function() {
+            diceVals[idx] = (diceVals[idx] % 6) + 1;
+            this.setAttribute('data-val', diceVals[idx]);
+            this.innerHTML = diceSvg(diceVals[idx]);
+            updateTotal();
+          });
+        });
+        document.getElementById('btn-chance-confirm').addEventListener('click', function() {
+          var sum = diceVals.reduce(function(a,b){return a+b;}, 0);
+          saveScore(sum);
+        });
+        document.getElementById('btn-chance-skip').addEventListener('click', function() { saveScore(0); });
+        return;
       }
     }
     
