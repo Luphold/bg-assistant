@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.147 -->
+<!-- TI4 Tracker 2.148 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -351,7 +351,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.147';
+var VERSION = '2.148';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -4915,7 +4915,8 @@ function doEndGame(winnerName) {
   state.endTime = new Date().toISOString();
   // Game ended cleanly — clear the local snapshot since history now has the data
   clearLocalSnapshot();
-  // Save to history (only if game lasted more than 2 rounds)
+  // Save to history only after at least 2 completed rounds (i.e. on round 3 or later)
+  log('doEndGame: round=' + state.round + ', will save to history: ' + (state.round > 2));
   if (state.round > 2) {
     // Load photos from cache and bundle into history
     loadAllPhotoCache().then(function(photos) {
@@ -4933,16 +4934,20 @@ function doEndGame(winnerName) {
         vpGoal: state.vpGoal,
         roomCode: roomCode
       };
-      // Local save (IndexedDB)
+      // Local save (IndexedDB) — keeps the photos
       dbSet('history', historyEntry).then(function() {
+        log('History saved to IndexedDB');
         clearPhotoCache();
-      });
-      // Also save to Supabase ti4_history so it survives even when IndexedDB is flaky
+      }).catch(function(e) { log('History IndexedDB save failed: ' + e.message); });
+      // Also save to Supabase ti4_history so it survives even when IndexedDB is flaky.
+      // Strip roundPhotos before sending — they can be large base64 blobs and cause failures.
       if (supabase) {
+        var cloudEntry = Object.assign({}, historyEntry);
+        delete cloudEntry.roundPhotos;
         supabase.from('ti4_history').insert({
           room_code: roomCode,
           played_at: historyEntry.playedAt,
-          state: historyEntry,
+          state: cloudEntry,
           players: historyEntry.players,
           winner: winnerName,
           rounds: state.round,
@@ -5403,14 +5408,7 @@ window.tempAutoColor = tempAutoColor;
 
 function newGame() {
   if (!isAdmin) return;
-  showInfoModal({
-    icon: '🎮',
-    title: 'New Game?',
-    message: 'Start a new game?<br>If a game is in progress, it will be ended and saved to history.',
-    confirmLabel: 'Start New Game',
-    cancelLabel: 'Cancel',
-    onConfirm: doNewGame
-  });
+  doNewGame();
 }
 
 function doNewGame() {
@@ -5443,16 +5441,19 @@ function doNewGame() {
           startFreshGame();
         });
         if (supabase) {
+          var cloudEntry = Object.assign({}, historyEntry);
+          delete cloudEntry.roundPhotos;
           supabase.from('ti4_history').insert({
             room_code: roomCode,
             played_at: historyEntry.playedAt,
-            state: historyEntry,
+            state: cloudEntry,
             players: historyEntry.players,
             winner: winnerName,
             rounds: state.round,
             vp_goal: state.vpGoal
           }).then(function(r) {
             if (r.error) log('History push error: ' + r.error.message);
+            else log('History pushed to Supabase (from newGame)');
           }).catch(function(){});
         }
       });
