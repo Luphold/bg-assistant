@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.151 -->
+<!-- TI4 Tracker 2.152 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -351,7 +351,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.151';
+var VERSION = '2.152';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -3528,6 +3528,8 @@ function closeModal() {
   m.classList.remove('modal-wide');
   document.getElementById('modal-overlay').classList.remove('open');
   if (typeof stopVotingAutoRefresh === 'function') stopVotingAutoRefresh();
+  // Clear any open-thread tracking so background polling doesn't try to refresh a closed modal
+  window._openThreadPartner = null;
 }
 
 // Track which objective is being shown in the enlarged view
@@ -5124,6 +5126,8 @@ function unlogEvent(type, playerIdx, name) {
 // =========== MESSAGING ===========
 
 function openMessages() {
+  // Returning to the inbox view — no longer in a thread
+  window._openThreadPartner = null;
   log('openMessages: roomCode=' + roomCode + ' supabase=' + !!supabase + ' myClaimedSlot=' + myClaimedSlot + ' myUsername=' + myUsername);
   if (!roomCode || !supabase) {
     alert('Not connected to a game.');
@@ -5238,6 +5242,8 @@ function openThread(partner) {
     alert('You need to claim a player slot first.');
     return;
   }
+  // Track which thread is open so background polling can refresh it
+  window._openThreadPartner = partner;
   var myPlayerName = state.players[myClaimedSlot].name;
   fetchMessages().then(function(msgs) {
     var thread = msgs.filter(function(m) {
@@ -5301,6 +5307,67 @@ function openThread(partner) {
     }, 50);
     updateMessageBadge();
   });
+}
+
+// Refresh the open thread's message list without disturbing the input field or scroll position
+// Called by message polling every 5s when a thread is open.
+function refreshOpenThread() {
+  var partner = window._openThreadPartner;
+  if (!partner) return;
+  var threadEl = document.getElementById('thread-msgs');
+  if (!threadEl) {
+    // Thread modal isn't actually open anymore — clear the flag
+    window._openThreadPartner = null;
+    return;
+  }
+  if (myClaimedSlot < 0) return;
+  var myPlayerName = state.players[myClaimedSlot] && state.players[myClaimedSlot].name;
+  if (!myPlayerName) return;
+  
+  fetchMessages().then(function(msgs) {
+    var thread = msgs.filter(function(m) {
+      return (m.sender === partner && m.recipient === myPlayerName) ||
+             (m.sender === myPlayerName && m.recipient === partner);
+    });
+    // Mark all visible messages from partner as seen
+    var newlySeen = false;
+    thread.forEach(function(m) {
+      if (m.recipient === myPlayerName && !seenMessageIds[m.id]) {
+        seenMessageIds[m.id] = true;
+        newlySeen = true;
+      }
+    });
+    if (newlySeen) {
+      dbSet('settings', { k: 'seenMessageIds', v: JSON.stringify(seenMessageIds) });
+    }
+    
+    // Detect if user is currently scrolled to bottom (to preserve "stay at bottom" UX)
+    var atBottom = threadEl.scrollTop + threadEl.clientHeight >= threadEl.scrollHeight - 8;
+    
+    // Re-render the message list
+    var h = '';
+    if (!thread.length) {
+      h = '<div class="small dim center" style="padding:20px">No messages yet — start the conversation</div>';
+    } else {
+      thread.forEach(function(m) {
+        var fromMe = (m.sender === myPlayerName);
+        var bubble = fromMe
+          ? 'background:rgba(93,184,255,0.15);border:1px solid rgba(93,184,255,0.4);align-self:flex-end;max-width:80%'
+          : 'background:rgba(36, 50, 84, 0.5);border:1px solid var(--border);align-self:flex-start;max-width:80%';
+        var time = new Date(m.sent_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        h += '<div style="' + bubble + ';border-radius:10px;padding:8px 12px">';
+        h += '<div style="font-size:13px;line-height:1.4;word-wrap:break-word;white-space:pre-wrap">' + escapeHtml(m.body) + '</div>';
+        h += '<div class="small dim" style="font-size:9px;margin-top:3px;text-align:right">' + time + '</div>';
+        h += '</div>';
+      });
+    }
+    threadEl.innerHTML = h;
+    
+    // Restore scroll position: if user was at bottom, keep them at bottom (so new msgs are visible)
+    if (atBottom) threadEl.scrollTop = threadEl.scrollHeight;
+    
+    if (newlySeen) updateMessageBadge();
+  }).catch(function() {});
 }
 
 function sendMessage(partner) {
@@ -5447,7 +5514,10 @@ function startMessagePolling() {
     }
     updateMessageBadge();
   });
-  messagesPollInterval = setInterval(updateMessageBadge, 5000);
+  messagesPollInterval = setInterval(function() {
+    updateMessageBadge();
+    refreshOpenThread();
+  }, 5000);
 }
 
 window.openMessages = openMessages;
