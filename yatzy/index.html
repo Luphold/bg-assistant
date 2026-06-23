@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Yatzy Scorecard 1.3.1 -->
+<!-- Yatzy Scorecard 1.4.1 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -111,13 +111,14 @@
       table-layout: fixed;
     }
     .score-table th, .score-table td {
-      padding: 10px 4px; text-align: center;
+      padding: 3px 4px; text-align: center;
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
       font-size: 21px;
       font-weight: 600;
+      line-height: 1.1;
     }
-    .score-table th { background: var(--header-bg); color: var(--header-text); font-weight: 600; letter-spacing: .04em; font-size: 14px; }
+    .score-table th { background: var(--header-bg); color: var(--header-text); font-weight: 600; letter-spacing: .04em; font-size: 14px; padding: 8px 4px; }
     .score-table th.cat-header { text-align: left; width: 38%; padding-left: 14px; font-size: 12px; }
     .score-table td.cat-name { text-align: left; padding-left: 14px; font-weight: 500; color: var(--text); font-size: 14px; }
     .score-table td.cat-hint { text-align: left; padding-left: 14px; }
@@ -319,7 +320,8 @@
     .screen.active { display: block; }
     
     @media (max-width: 600px) {
-      .score-table th, .score-table td { padding: 8px 2px; font-size: 18px; }
+      .score-table th, .score-table td { padding: 3px 2px; font-size: 18px; }
+      .score-table th { padding: 6px 2px; }
       .score-table th.cat-header, .score-table td.cat-name { width: 38%; padding-left: 8px; font-size: 11px; }
       .score-table tr.row-total td { font-size: 19px; }
       .score-table tr.row-bonus td { font-size: 16px; }
@@ -392,7 +394,7 @@
     
     <div class="footer">
       Yatzy Scorecard
-      <div class="version">v1.3.1</div>
+      <div class="version">v1.4.1</div>
     </div>
   </div>
   
@@ -405,7 +407,7 @@
     // =============================================================================
     // SWEDISH YATZY — Category definitions
     // =============================================================================
-    var VERSION = '1.3.1';
+    var VERSION = '1.4.1';
     
     var CATEGORIES = [
       { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
@@ -693,6 +695,23 @@
       });
       return sum;
     }
+    // Running differential vs. the pace target needed for the +50 bonus.
+    // Pace target: 3 of each die value = 3, 6, 9, 12, 15, 18 (totals 63).
+    // We only sum the pace for categories actually scored so far,
+    // then return (actualSum - paceTarget). Positive = ahead of pace; negative = behind.
+    var UPPER_KEYS = ['ones','twos','threes','fours','fives','sixes'];
+    var UPPER_PACE = { ones:3, twos:6, threes:9, fours:12, fives:15, sixes:18 };
+    function calcBonusDiff(p) {
+      var actual = 0, target = 0, anyScored = false;
+      UPPER_KEYS.forEach(function(k) {
+        if (typeof p.scores[k] === 'number') {
+          actual += p.scores[k];
+          target += UPPER_PACE[k];
+          anyScored = true;
+        }
+      });
+      return { diff: actual - target, anyScored: anyScored };
+    }
     function calcBonus(p) {
       return calcUpperSum(p) >= 63 ? 50 : 0;
     }
@@ -745,14 +764,22 @@
       CATEGORIES.filter(function(c) { return c.group === 'upper'; }).forEach(function(cat) {
         h += renderRow(cat, current);
       });
-      // Upper Sum row (auto)
-      h += '<tr class="row-summary"><td class="cat-name">Sum <span class="dim" style="font-weight:400;font-size:11px">(upper)</span></td>';
+      // Upper Sum row (auto) — with running differential vs +50 bonus pace
+      h += '<tr class="row-summary"><td class="cat-name">Sum</td>';
       state.players.forEach(function(p, i) {
-        h += '<td class="auto' + (i === current && !state.ended ? ' active-col' : '') + '">' + calcUpperSum(p) + '</td>';
+        var sum = calcUpperSum(p);
+        var d = calcBonusDiff(p);
+        var diffLabel = '';
+        if (d.anyScored) {
+          var sign = d.diff > 0 ? '+' : '';
+          var color = d.diff > 0 ? 'var(--accent)' : d.diff < 0 ? 'var(--red)' : 'var(--text-dim)';
+          diffLabel = ' <span style="font-size:12px;color:' + color + ';font-weight:600">(' + sign + d.diff + ')</span>';
+        }
+        h += '<td class="auto' + (i === current && !state.ended ? ' active-col' : '') + '">' + sum + diffLabel + '</td>';
       });
       h += '</tr>';
       // Bonus row (auto)
-      h += '<tr class="row-bonus"><td class="cat-name">Bonus <span class="dim" style="font-weight:400;font-size:11px">(+50 if ≥63)</span></td>';
+      h += '<tr class="row-bonus"><td class="cat-name">Bonus</td>';
       state.players.forEach(function(p, i) {
         var bonus = calcBonus(p);
         h += '<td class="auto' + (i === current && !state.ended ? ' active-col' : '') + '" style="color:' + (bonus ? 'var(--accent)' : 'var(--text-dim)') + ';font-weight:' + (bonus ? '700' : '400') + '">' + (bonus ? '+50' : '–') + '</td>';
