@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Yatzy Scorecard 1.4.3 -->
+<!-- Yatzy Scorecard 1.5.0 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -394,7 +394,7 @@
     
     <div class="footer">
       Yatzy Scorecard
-      <div class="version">v1.4.3</div>
+      <div class="version">v1.5.0</div>
     </div>
   </div>
   
@@ -407,7 +407,7 @@
     // =============================================================================
     // SWEDISH YATZY — Category definitions
     // =============================================================================
-    var VERSION = '1.4.3';
+    var VERSION = '1.5.0';
     
     var CATEGORIES = [
       { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
@@ -1358,7 +1358,7 @@
         // Build player rollups
         var byPlayer = {};
         function row(name) {
-          if (!byPlayer[name]) byPlayer[name] = { name: name, wins: 0, losses: 0, draws: 0, highest: 0, lowest: Infinity, games: 0, totalSum: 0 };
+          if (!byPlayer[name]) byPlayer[name] = { name: name, wins: 0, losses: 0, draws: 0, highest: 0, lowest: Infinity, games: 0, scoredGames: 0, totalSum: 0 };
           return byPlayer[name];
         }
         games.forEach(function(g) {
@@ -1368,9 +1368,13 @@
           players.forEach(function(p) {
             var pr = row(p.name);
             pr.games++;
-            pr.totalSum += (p.total || 0);
-            if (p.total > pr.highest) pr.highest = p.total;
-            if (p.total < pr.lowest) pr.lowest = p.total;
+            // Only count totals when they're real numbers (skip null/undefined for legacy imports)
+            if (typeof p.total === 'number') {
+              pr.totalSum += p.total;
+              pr.scoredGames++;
+              if (p.total > pr.highest) pr.highest = p.total;
+              if (p.total < pr.lowest) pr.lowest = p.total;
+            }
             if (isDraw) {
               // If their name is in the draw set, count as draw; otherwise loss
               var ds = g.state && g.state.drawNames;
@@ -1389,13 +1393,15 @@
         var h = '';
         h += '<div class="stats-row header"><div>Player</div><div>W</div><div>L</div><div>D</div><div>High / Low</div></div>';
         rows.forEach(function(p) {
-          var avg = p.games ? Math.round(p.totalSum / p.games) : 0;
+          var avg = p.scoredGames ? Math.round(p.totalSum / p.scoredGames) : 0;
+          var hi = p.scoredGames ? p.highest : null;
+          var lo = (p.scoredGames && p.lowest !== Infinity) ? p.lowest : null;
           h += '<div class="stats-row">';
-          h += '<div class="name">' + escapeHtml(p.name) + ' <span class="dim small">(' + p.games + 'g · avg ' + avg + ')</span></div>';
+          h += '<div class="name">' + escapeHtml(p.name) + ' <span class="dim small">(' + p.games + 'g' + (p.scoredGames ? ' · avg ' + avg : '') + ')</span></div>';
           h += '<div>' + p.wins + '</div>';
           h += '<div>' + p.losses + '</div>';
           h += '<div>' + p.draws + '</div>';
-          h += '<div class="dim small">' + p.highest + ' / ' + (p.lowest === Infinity ? '–' : p.lowest) + '</div>';
+          h += '<div class="dim small">' + (hi != null ? hi : '–') + ' / ' + (lo != null ? lo : '–') + '</div>';
           h += '</div>';
         });
         h += '<div class="dim small" style="text-align:center;padding:12px 0;border-top:1px solid var(--border);margin-top:8px">' + games.length + ' game' + (games.length === 1 ? '' : 's') + ' recorded</div>';
