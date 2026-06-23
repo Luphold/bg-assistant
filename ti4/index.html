@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- TI4 Tracker 2.149 -->
+<!-- TI4 Tracker 2.151 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -351,7 +351,7 @@ label { font-size: 12px; color: var(--text-dim); display: block; margin-bottom: 
 // TI4 Tracker - Single file, no module systems, no IIFEs
 // =============================================================================
 
-var VERSION = '2.149';
+var VERSION = '2.151';
 document.getElementById('version-display').textContent = 'v' + VERSION;
 
 // Debug logger - silent unless panel toggled open
@@ -4375,6 +4375,95 @@ function promptRoundPhoto() {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
+// End-of-game photo prompt — same pattern as promptRoundPhoto, but the action is doEndGame
+function promptEndGamePhoto(winnerName) {
+  window._pendingEndGameWinner = winnerName;
+  var h = '<div style="text-align:center;padding:8px 0">';
+  h += '<div style="font-size:32px;line-height:1">🏁</div>';
+  h += '<div class="gold" style="font-size:16px;letter-spacing:.08em;margin-top:6px;margin-bottom:8px">Final Board Photo?</div>';
+  h += '<div class="small dim" style="margin-bottom:16px;line-height:1.5">Take a final photo of the board to save with the game? (optional)</div>';
+  h += '<div style="display:flex;flex-direction:column;gap:8px">';
+  h += '<button class="btn btn-primary" onclick="captureEndGamePhoto()">📷 Take Photo & End Game</button>';
+  h += '<button class="btn" onclick="endGameWithoutPhoto()">Skip Photo & End Game</button>';
+  h += '<button class="btn btn-sm" onclick="closeModal()" style="border:none;background:none;color:var(--text-dim)">Cancel</button>';
+  h += '</div></div>';
+  
+  var modal = document.getElementById('modal');
+  modal.classList.add('modal-center');
+  modal.innerHTML = h;
+  modal.classList.add('open');
+  document.getElementById('modal-overlay').classList.add('open');
+}
+window.promptEndGamePhoto = promptEndGamePhoto;
+
+function endGameWithoutPhoto() {
+  closeModal();
+  doEndGame(window._pendingEndGameWinner);
+}
+window.endGameWithoutPhoto = endGameWithoutPhoto;
+
+function captureEndGamePhoto() {
+  var input = document.getElementById('round-photo-input');
+  input.value = '';
+  input.onchange = function(e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) {
+      closeModal();
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      var img = new Image();
+      img.onload = function() {
+        var isPortrait = img.height > img.width;
+        var srcW = img.width, srcH = img.height;
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        if (isPortrait) {
+          canvas.width = srcH; canvas.height = srcW;
+          ctx.translate(canvas.width / 2, canvas.height / 2);
+          ctx.rotate(Math.PI / 2);
+          ctx.drawImage(img, -srcW / 2, -srcH / 2);
+        } else {
+          canvas.width = srcW; canvas.height = srcH;
+          ctx.drawImage(img, 0, 0);
+        }
+        // Resize to max width 1600 to keep file size reasonable
+        var maxW = 1600;
+        if (canvas.width > maxW) {
+          var scale = maxW / canvas.width;
+          var resized = document.createElement('canvas');
+          resized.width = maxW;
+          resized.height = canvas.height * scale;
+          resized.getContext('2d').drawImage(canvas, 0, 0, resized.width, resized.height);
+          canvas = resized;
+        }
+        var dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        // Save under a special "final" round number = state.round (the current round when ending)
+        // We use a key of round=state.round+1 to distinguish from the last completed round's photo
+        // Actually using state.round is fine since end-game IS the current round's end shot
+        var finalRound = state.round;
+        savePhotoCache(finalRound, dataUrl).then(function() {
+          closeModal();
+          doEndGame(window._pendingEndGameWinner);
+        });
+      };
+      img.onerror = function() {
+        alert('Could not load photo.');
+        closeModal();
+      };
+      img.src = ev.target.result;
+    };
+    reader.onerror = function() {
+      alert('Could not read file.');
+      closeModal();
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+window.captureEndGamePhoto = captureEndGamePhoto;
+
 function advanceRoundWithoutPhoto() {
   closeModal();
   proceedAfterPhoto();
@@ -4437,58 +4526,55 @@ function captureRoundPhoto() {
   input.click();
 }
 
-// Photos stored in IndexedDB during game; bundled into history on endGame
+// Photos stored in memory + localStorage shadow during game; bundled into history on endGame.
+// IndexedDB is bypassed because it's unreliable on some devices.
+var _photoCache = {}; // { 1: "data:image/...", 2: "data:image/...", ... }
+
 function savePhotoCache(roundNum, dataUrl) {
-  return openDB().then(function(d) {
-    return new Promise(function(resolve) {
-      // Use settings store with a "photo:N" key
-      if (!d.objectStoreNames.contains('settings')) { resolve(false); return; }
-      var r = d.transaction('settings', 'readwrite').objectStore('settings').put({ k: 'photo:' + roundNum, v: dataUrl });
-      r.onsuccess = function() { resolve(true); };
-      r.onerror = function() { resolve(false); };
-    });
-  });
+  _photoCache[roundNum] = dataUrl;
+  // Also shadow to localStorage with roomCode as part of the key so different rooms don't collide.
+  // Wrapped in try/catch because large base64 can fail localStorage quota.
+  try {
+    var key = 'bg-photo:' + (roomCode || 'unknown') + ':' + roundNum;
+    localStorage.setItem(key, dataUrl);
+  } catch (e) {
+    log('Photo localStorage save failed (quota?): ' + e.message);
+  }
+  return Promise.resolve(true);
 }
 
 function loadAllPhotoCache() {
-  return openDB().then(function(d) {
-    return new Promise(function(resolve) {
-      var photos = {};
-      var r = d.transaction('settings').objectStore('settings').openCursor();
-      r.onsuccess = function(ev) {
-        var cur = ev.target.result;
-        if (cur) {
-          if (typeof cur.key === 'string' && cur.key.indexOf('photo:') === 0) {
-            var roundNum = parseInt(cur.key.slice(6), 10);
-            if (!isNaN(roundNum)) photos[roundNum] = cur.value.v;
-          }
-          cur.continue();
-        } else {
-          resolve(photos);
+  // Start with in-memory cache (fastest, always current)
+  var photos = Object.assign({}, _photoCache);
+  // Augment from localStorage for current room (in case page reloaded)
+  try {
+    var prefix = 'bg-photo:' + (roomCode || 'unknown') + ':';
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf(prefix) === 0) {
+        var round = parseInt(k.substring(prefix.length), 10);
+        if (!isNaN(round) && !photos[round]) {
+          photos[round] = localStorage.getItem(k);
         }
-      };
-      r.onerror = function() { resolve({}); };
-    });
-  });
+      }
+    }
+  } catch (e) {}
+  return Promise.resolve(photos);
 }
 
 function clearPhotoCache() {
-  return openDB().then(function(d) {
-    return new Promise(function(resolve) {
-      var store = d.transaction('settings', 'readwrite').objectStore('settings');
-      var r = store.openCursor();
-      r.onsuccess = function(ev) {
-        var cur = ev.target.result;
-        if (cur) {
-          if (typeof cur.key === 'string' && cur.key.indexOf('photo:') === 0) {
-            cur.delete();
-          }
-          cur.continue();
-        } else { resolve(true); }
-      };
-      r.onerror = function() { resolve(false); };
-    });
-  });
+  _photoCache = {};
+  // Clear localStorage photos for current room
+  try {
+    var prefix = 'bg-photo:' + (roomCode || 'unknown') + ':';
+    var toRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf(prefix) === 0) toRemove.push(k);
+    }
+    toRemove.forEach(function(k) { try { localStorage.removeItem(k); } catch (e) {} });
+  } catch (e) {}
+  return Promise.resolve();
 }
 
 function proceedAfterPhoto() {
@@ -4898,11 +4984,23 @@ function endGame(winnerName) {
       message: 'End game and save results to history?',
       confirmLabel: 'End Game',
       cancelLabel: 'Cancel',
-      onConfirm: function() { doEndGame(null); }
+      onConfirm: function() {
+        // Offer to take a final board photo before ending
+        if (state.round > 2) {
+          promptEndGamePhoto(null);
+        } else {
+          doEndGame(null);
+        }
+      }
     });
     return;
   }
-  doEndGame(winnerName);
+  // Winner provided — also offer photo prompt for completed games
+  if (state.round > 2) {
+    promptEndGamePhoto(winnerName);
+  } else {
+    doEndGame(winnerName);
+  }
 }
 
 function doEndGame(winnerName) {
@@ -4933,40 +5031,68 @@ function doEndGame(winnerName) {
       roomCode: roomCode
     };
     
-    // Fire Supabase save IMMEDIATELY (cloud doesn't need photos) — doesn't depend on IndexedDB
-    if (supabase) {
-      log('Inserting into ti4_history…');
-      supabase.from('ti4_history').insert({
-        room_code: roomCode,
-        played_at: baseEntry.playedAt,
-        state: baseEntry,
-        players: baseEntry.players,
-        winner: winnerName,
-        rounds: state.round,
-        vp_goal: state.vpGoal
-      }).then(function(r) {
-        if (r.error) log('History push error: ' + r.error.message);
-        else log('History pushed to Supabase');
-      }).catch(function(e) { log('History push exception: ' + (e && e.message)); });
-    } else {
-      log('No supabase client — skipping cloud save');
-    }
-    
-    // Local save: attempt photo load with a 3-second timeout; save with whatever photos we have
-    var photoPromise = loadAllPhotoCache();
-    var timeoutPromise = new Promise(function(resolve) { setTimeout(function() { resolve({}); }, 3000); });
-    Promise.race([photoPromise, timeoutPromise]).then(function(photos) {
-      var localEntry = Object.assign({}, baseEntry, { roundPhotos: photos || {} });
-      dbSet('history', localEntry).then(function(ok) {
+    // Load photos (memory-based, fast) and then save to both local and cloud
+    loadAllPhotoCache().then(function(photos) {
+      photos = photos || {};
+      var fullEntry = Object.assign({}, baseEntry, { roundPhotos: photos });
+      log('History entry includes ' + Object.keys(photos).length + ' photos');
+      
+      // Local save (IndexedDB)
+      dbSet('history', fullEntry).then(function(ok) {
         log('History local save ' + (ok ? 'OK' : 'failed'));
         clearPhotoCache();
       }).catch(function(e) { log('History IndexedDB save exception: ' + (e && e.message)); });
+      
+      // Cloud save with photos included
+      if (supabase) {
+        log('Inserting into ti4_history…');
+        supabase.from('ti4_history').insert({
+          room_code: roomCode,
+          played_at: fullEntry.playedAt,
+          state: fullEntry,
+          players: fullEntry.players,
+          winner: winnerName,
+          rounds: state.round,
+          vp_goal: state.vpGoal
+        }).then(function(r) {
+          if (r.error) { log('History push error: ' + r.error.message); return; }
+          log('History pushed to Supabase');
+          // Cleanup: strip photos from games beyond the 3 most recent
+          pruneOldHistoryPhotos();
+        }).catch(function(e) { log('History push exception: ' + (e && e.message)); });
+      } else {
+        log('No supabase client — skipping cloud save');
+      }
     });
   } else {
     clearPhotoCache();
   }
   renderAll();
   if (isAdmin) pushState();
+}
+
+// Keep photos only in the 3 most recent ti4_history rows. Older rows get their state.roundPhotos
+// cleared (set to {}) — the game data (rounds, scores, log) is preserved.
+function pruneOldHistoryPhotos() {
+  if (!supabase) return;
+  // Fetch all rows, sorted newest first
+  supabase.from('ti4_history').select('id, played_at, state').order('played_at', { ascending: false }).then(function(r) {
+    if (r.error) { log('Prune fetch error: ' + r.error.message); return; }
+    var rows = r.data || [];
+    if (rows.length <= 3) { log('Prune: only ' + rows.length + ' rows, nothing to clean'); return; }
+    var toClean = rows.slice(3); // everything past the first 3
+    log('Prune: clearing photos from ' + toClean.length + ' older games');
+    toClean.forEach(function(row) {
+      var s = row.state || {};
+      // Skip if already empty
+      if (!s.roundPhotos || Object.keys(s.roundPhotos).length === 0) return;
+      var newState = Object.assign({}, s, { roundPhotos: {} });
+      supabase.from('ti4_history').update({ state: newState }).eq('id', row.id).then(function(u) {
+        if (u.error) log('Prune update id=' + row.id + ' error: ' + u.error.message);
+        else log('Pruned photos from id=' + row.id);
+      }).catch(function(e) { log('Prune update exception: ' + (e && e.message)); });
+    });
+  }).catch(function(e) { log('Prune exception: ' + (e && e.message)); });
 }
 
 // Write a summary row to bg_game_log so the Board Game Assistant front page
@@ -5445,19 +5571,17 @@ function doNewGame() {
           startFreshGame();
         });
         if (supabase) {
-          var cloudEntry = Object.assign({}, historyEntry);
-          delete cloudEntry.roundPhotos;
           supabase.from('ti4_history').insert({
             room_code: roomCode,
             played_at: historyEntry.playedAt,
-            state: cloudEntry,
+            state: historyEntry,
             players: historyEntry.players,
             winner: winnerName,
             rounds: state.round,
             vp_goal: state.vpGoal
           }).then(function(r) {
             if (r.error) log('History push error: ' + r.error.message);
-            else log('History pushed to Supabase (from newGame)');
+            else { log('History pushed to Supabase (from newGame)'); pruneOldHistoryPhotos(); }
           }).catch(function(){});
         }
       });
@@ -5509,6 +5633,7 @@ function removeTech(name) {
 }
 
 function deleteHistory(id) {
+  log('deleteHistory: id=' + id);
   showInfoModal({
     icon: '🗑',
     title: 'Delete Entry?',
@@ -5520,14 +5645,26 @@ function deleteHistory(id) {
       if (idStr.indexOf('sb-') === 0) {
         // Supabase entry — delete by Supabase row id
         var sbId = parseInt(idStr.substring(3), 10);
-        if (supabase && !isNaN(sbId)) {
-          supabase.from('ti4_history').delete().eq('id', sbId).then(function() { renderHistory(); });
-        }
+        if (!supabase) { log('No supabase client — cannot delete'); return; }
+        if (isNaN(sbId)) { log('Invalid Supabase id: ' + idStr); return; }
+        log('Deleting Supabase row ' + sbId);
+        supabase.from('ti4_history').delete().eq('id', sbId).then(function(r) {
+          if (r.error) { log('Delete error: ' + r.error.message); alert('Delete failed: ' + r.error.message); }
+          else log('Supabase row deleted');
+          renderHistory();
+        }).catch(function(e) { log('Delete exception: ' + (e && e.message)); });
       } else {
         // Local IndexedDB entry — id is numeric
         var num = parseInt(idStr, 10);
-        if (!isNaN(num)) dbDelete('history', num).then(renderHistory);
-        else renderHistory();
+        log('Deleting IndexedDB row ' + num);
+        if (!isNaN(num)) {
+          dbDelete('history', num).then(function() {
+            log('Local row deleted');
+            renderHistory();
+          });
+        } else {
+          renderHistory();
+        }
       }
     }
   });

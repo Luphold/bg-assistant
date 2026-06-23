@@ -71,6 +71,7 @@ CREATE POLICY "rooms_delete" ON ti4_rooms  FOR DELETE USING (true);
 
 CREATE POLICY "history_select" ON ti4_history FOR SELECT USING (true);
 CREATE POLICY "history_insert" ON ti4_history FOR INSERT WITH CHECK (true);
+CREATE POLICY "history_update" ON ti4_history FOR UPDATE USING (true);
 CREATE POLICY "history_delete" ON ti4_history FOR DELETE USING (true);
 
 CREATE POLICY "messages_select" ON ti4_chat FOR SELECT USING (true);
