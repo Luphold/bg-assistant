@@ -1,662 +1,554 @@
 <!DOCTYPE html>
-<!-- Board Game Assistant v2.0.13 - fixed missing Yatzy card + stats source on front page -->
+<!-- Yatzy Scorecard 1.6.1 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-  <title>Board Game Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Yatzy Scorecard</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0a0e1a">
+  <meta name="theme-color" content="#f6f3ec">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
   <style>
     :root {
-      --bg: #0a0e1a;
-      --panel: rgba(26, 36, 64, 0.55);
-      --panel2: rgba(36, 50, 84, 0.5);
-      --gold: #d4ac0d;
-      --text: #dde4f0;
-      --text-dim: #8c97b0;
-      --border: rgba(212, 172, 13, 0.18);
-      --border2: rgba(212, 172, 13, 0.35);
-      --red: #e74c3c;
+      --bg: #f6f3ec;          /* warm cream */
+      --panel: #ffffff;
+      --text: #2c2a25;        /* near-black charcoal */
+      --text-dim: #6b685e;
+      --border: #d8d1c1;
+      --border-strong: #9b9484;
+      --accent: #4a7a52;      /* muted green */
+      --accent-soft: #e6efe7;
+      --gold: #b89734;
+      --red: #c0473f;
+      --header-bg: #2c2a25;
+      --header-text: #f6f3ec;
+      --row-alt: #faf7f0;
+      --filled-bg: #eef4ef;
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { margin: 0; padding: 0; min-height: 100vh; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      color: var(--text);
       background: var(--bg);
-      background-image:
-        radial-gradient(circle at 25% 50%, rgba(255,240,200,0.8) 0.5px, transparent 1.4px),
-        radial-gradient(circle at 75% 30%, rgba(220,235,255,0.7) 0.4px, transparent 1.2px),
-        radial-gradient(circle at 50% 80%, rgba(255,245,220,0.6) 0.5px, transparent 1.4px),
-        radial-gradient(circle at 10% 20%, rgba(200,220,255,0.5) 0.3px, transparent 1.0px),
-        radial-gradient(circle at 90% 70%, rgba(255,230,200,0.7) 0.4px, transparent 1.2px),
-        radial-gradient(circle at 50% 10%, rgba(255,230,220,0.7) 0.4px, transparent 1.2px),
-        radial-gradient(ellipse at 30% 40%, rgba(80, 110, 200, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 70% 60%, rgba(180, 60, 130, 0.06) 0%, transparent 50%);
-      background-size: 320px 320px, 400px 400px, 350px 350px, 280px 280px, 380px 380px, 300px 300px, 100% 100%, 100% 100%;
-    }
-    .container { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px 18px; }
-    .hdr { text-align: center; padding: 12px 4px 28px 4px; position: relative; }
-    .hdr h1 {
-      margin: 0;
-      font-size: 28px;
-      letter-spacing: .14em;
-      color: var(--gold);
-      text-shadow: 0 0 12px rgba(212,172,13,0.4);
-      font-weight: 700;
-    }
-    .hdr .sub {
-      margin-top: 6px;
-      font-size: 12px;
-      letter-spacing: .2em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-    }
-    .gear-btn {
-      position: absolute;
-      top: 14px;
-      right: 4px;
-      background: none;
-      border: 1px solid var(--border2);
-      color: var(--text-dim);
-      font-size: 16px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .gear-btn:hover { color: var(--gold); border-color: var(--gold); }
-    
-    .user-panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 22px;
-      backdrop-filter: blur(2px);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .user-panel label {
-      font-size: 11px;
-      letter-spacing: .15em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      flex: 0 0 auto;
-    }
-    .user-panel input {
-      flex: 1;
-      background: rgba(10, 14, 26, 0.4);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
       color: var(--text);
-      padding: 7px 10px;
-      font-size: 13px;
+      min-height: 100vh;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+    .container { max-width: 480px; margin: 0 auto; padding: 12px; }
+    
+    /* Header */
+    .hdr { position: relative; padding: 18px 8px 14px; text-align: center; border-bottom: 1px solid var(--border); }
+    .hdr h1 { margin: 0; font-size: 22px; letter-spacing: .15em; color: var(--text); font-weight: 700; }
+    .hdr .sub { margin-top: 4px; font-size: 11px; color: var(--text-dim); letter-spacing: .1em; text-transform: uppercase; }
+    .hdr .back-btn {
+      position: absolute; left: 6px; top: 16px;
+      background: none; border: 1px solid var(--border);
+      color: var(--text-dim); font-size: 14px;
+      padding: 5px 10px; border-radius: 6px; text-decoration: none;
+      line-height: 1;
+    }
+    .hdr .back-btn:hover { background: var(--panel); color: var(--text); }
+    .hdr .supa-status-mini {
+      position: absolute; right: 6px; top: 12px;
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 10px; font-size: 11px;
+      border-radius: 6px; background: var(--panel); border: 1px solid var(--border);
+      max-width: 160px;
+    }
+    .hdr .supa-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-dim); }
+    .hdr .supa-dot.ok { background: #4caf50; }
+    .hdr .supa-dot.error { background: var(--red); }
+    .hdr #supa-text { color: var(--text-dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hdr #supa-text.ok { color: #4caf50; }
+    .hdr #supa-text.error { color: var(--red); }
+    
+    /* Generic */
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin: 12px 0; }
+    .section-title { font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--text-dim); margin: 16px 0 6px; padding: 0 4px; }
+    .small { font-size: 12px; }
+    .dim { color: var(--text-dim); }
+    .center { text-align: center; }
+    
+    /* Buttons */
+    .btn {
+      background: var(--panel); border: 1px solid var(--border-strong);
+      color: var(--text); padding: 10px 16px; border-radius: 6px;
+      font-size: 14px; font-weight: 500; cursor: pointer;
+      transition: background .12s ease, border-color .12s ease;
       font-family: inherit;
     }
-    .user-panel input:focus { outline: none; border-color: var(--gold); }
-    .section-h {
-      font-size: 11px;
-      letter-spacing: .2em;
-      color: var(--gold);
-      text-transform: uppercase;
-      margin: 18px 0 10px 0;
-      text-align: center;
-    }
+    .btn:hover:not(:disabled) { background: var(--row-alt); border-color: var(--text); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn.primary:hover:not(:disabled) { background: #3d6443; border-color: #3d6443; }
+    .btn.danger { background: var(--panel); border-color: var(--red); color: var(--red); }
+    .btn.danger:hover:not(:disabled) { background: var(--red); color: white; }
+    .btn.full { display: block; width: 100%; }
+    .btn.sm { padding: 6px 10px; font-size: 12px; }
     
-    /* Admin frame containing the game cards */
-    .admin-frame {
-      border: 1px solid var(--border2);
-      border-radius: 12px;
-      padding: 26px 16px 16px 16px;
-      margin-bottom: 22px;
-      position: relative;
-      background: rgba(212, 172, 13, 0.03);
+    /* Inputs */
+    input[type="text"], input[type="number"] {
+      background: var(--panel); border: 1px solid var(--border-strong);
+      color: var(--text); padding: 8px 10px; border-radius: 6px;
+      font-size: 14px; width: 100%; font-family: inherit;
     }
-    .admin-label {
-      position: absolute;
-      top: -10px;
-      left: 18px;
-      background: var(--bg);
-      padding: 0 10px;
-      font-size: 11px;
-      letter-spacing: .2em;
-      color: var(--gold);
-      text-transform: uppercase;
-      font-weight: 700;
-    }
+    input:focus { outline: none; border-color: var(--accent); }
     
-    /* Big Guest button */
-    .big-guest-btn {
-      display: block;
-      width: 100%;
-      padding: 22px;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--gold);
-      background: rgba(212, 172, 13, 0.08);
-      border: 1px solid var(--gold);
-      border-radius: 12px;
+    /* Setup screen */
+    .setup-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .setup-row input { flex: 1; }
+    .setup-row .remove { background: none; border: none; color: var(--red); font-size: 18px; cursor: pointer; padding: 4px 8px; }
+    
+    /* Scorecard table */
+    .scorecard {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+    }
+    table.score-table {
+      width: 100%; border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .score-table th, .score-table td {
+      padding: 3px 4px; text-align: center;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-size: 21px;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+    .score-table th { background: var(--header-bg); color: var(--header-text); font-weight: 600; letter-spacing: .04em; font-size: 14px; padding: 8px 4px; }
+    .score-table th.cat-header { text-align: left; width: 30%; padding-left: 14px; font-size: 12px; }
+    .score-table td.cat-name { text-align: left; padding-left: 14px; font-weight: 500; color: var(--text); font-size: 14px; }
+    .score-table td.cat-hint { text-align: left; padding-left: 14px; }
+    .score-table td.cat-hint .hint-line { font-size: 10px; color: var(--text-dim); margin-top: 1px; font-style: italic; }
+    .score-table tr:nth-child(even) td { background: var(--row-alt); }
+    .score-table tr.row-summary td { background: var(--accent-soft); font-weight: 600; }
+    .score-table tr.row-bonus td { background: var(--accent-soft); font-weight: 600; font-style: italic; font-size: 18px; }
+    .score-table tr.row-total td { background: var(--header-bg); color: var(--header-text); font-weight: 700; font-size: 22px; }
+    
+    /* Score cells */
+    .score-cell {
       cursor: pointer;
-      font-family: inherit;
-      transition: all 0.18s;
-      text-align: center;
-      backdrop-filter: blur(2px);
+      color: var(--text-dim);
+      transition: background .12s ease;
     }
-    .big-guest-btn:hover {
-      background: rgba(212, 172, 13, 0.18);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 18px rgba(212, 172, 13, 0.2);
+    .score-cell:hover:not(.locked) { background: #efeadf !important; }
+    .score-cell.filled {
+      background: var(--filled-bg) !important;
+      color: var(--text);
+      font-weight: 600;
     }
-    .big-guest-btn:active {
-      transform: translateY(0);
-    }
-    .games {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-    }
-    .game-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      backdrop-filter: blur(2px);
-      transition: all 0.18s;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-    }
-    .game-card.available { border-color: var(--border2); }
-    .game-card.available:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 4px 18px rgba(212, 172, 13, 0.15); }
-    .game-card.placeholder { opacity: 0.6; }
-    .game-card.placeholder::after {
-      content: "COMING SOON";
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(231, 76, 60, 0.15);
+    .score-cell.zero {
       color: var(--red);
-      font-size: 9px;
-      font-weight: 700;
-      letter-spacing: .15em;
-      padding: 3px 7px;
-      border-radius: 3px;
-      border: 1px solid rgba(231, 76, 60, 0.4);
+      font-weight: 500;
     }
-    .game-emoji { font-size: 38px; line-height: 1; text-align: center; margin-top: 4px; }
-    .game-title { font-size: 16px; font-weight: 700; color: var(--gold); letter-spacing: .04em; text-align: center; }
-    .game-desc { font-size: 12px; color: var(--text-dim); line-height: 1.4; text-align: center; min-height: 32px; }
-    .game-game-stats {
-      font-size: 11px;
-      color: var(--text-dim);
-      text-align: center;
-      padding: 4px 0;
-      border-top: 1px solid var(--border);
-      letter-spacing: .03em;
+    .score-cell.locked { cursor: default; }
+    .score-cell.auto { background: transparent !important; font-style: italic; color: var(--text-dim); }
+    
+    /* Player header colors */
+    .player-col-1 { border-top: 3px solid #c0473f; }
+    .player-col-2 { border-top: 3px solid #1f6fad; }
+    .player-col-3 { border-top: 3px solid #7a4ba8; }
+    .player-col-4 { border-top: 3px solid #b89734; }
+    .player-col-5 { border-top: 3px solid #2e8c66; }
+    
+    /* Active player column highlighting */
+    th.active-col {
+      background: #4a7a52 !important;
+      box-shadow: inset 0 -2px 0 #ffd861;
     }
-    .game-game-stats b { color: var(--gold); font-weight: 600; }
-    .game-actions { display: flex; gap: 6px; margin-top: auto; }
-    .game-actions a, .game-actions button {
-      flex: 1; display: block; text-decoration: none; text-align: center;
-      padding: 7px 8px; border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: rgba(10, 14, 26, 0.4);
-      color: var(--text);
-      font-size: 11px; font-weight: 600; letter-spacing: .05em;
-      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    td.active-col { background: #f5fbf6 !important; }
+    .score-table tr:nth-child(even) td.active-col { background: #eef6ee !important; }
+    .score-table tr.row-summary td.active-col { background: #d8ebd9 !important; }
+    .score-table tr.row-bonus td.active-col { background: #d8ebd9 !important; }
+    .score-table tr.row-total td.active-col { background: #3d6443 !important; }
+    
+    /* Active cell with score still wins over active-col */
+    .score-cell.filled.active-col { background: #d6ebd7 !important; }
+    
+    /* Disabled cells: empty cells of non-active players — non-tappable, dim */
+    .score-cell.disabled {
+      cursor: default;
+      color: #bdb8a8;
+      background: transparent !important;
     }
-    .game-actions a:hover, .game-actions button:hover {
-      background: rgba(36, 50, 84, 0.7); color: var(--gold); border-color: var(--gold);
-    }
-    .game-actions a.disabled, .game-actions button.disabled { cursor: not-allowed; opacity: 0.5; }
-    .game-actions a.disabled:hover, .game-actions button.disabled:hover {
-      background: rgba(10, 14, 26, 0.4); color: var(--text); border-color: var(--border2);
-    }
-    .stats-panel {
-      margin-top: 28px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      backdrop-filter: blur(2px);
-    }
-    .stats-row {
-      display: flex; justify-content: space-around; gap: 10px; flex-wrap: wrap;
-    }
-    .stat-item { flex: 1; min-width: 100px; text-align: center; padding: 6px 4px; }
-    .stat-value { font-size: 26px; color: var(--gold); font-weight: 700; line-height: 1; }
-    .stat-label { font-size: 10px; letter-spacing: .15em; color: var(--text-dim); text-transform: uppercase; margin-top: 4px; }
-    .stats-empty { text-align: center; color: var(--text-dim); font-size: 12px; font-style: italic; padding: 14px 0; }
-    .stats-loading { text-align: center; color: var(--text-dim); font-size: 12px; padding: 14px 0; }
-    .last-played {
-      text-align: center;
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid var(--border);
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-    .last-played b { color: var(--text); font-weight: 600; }
-    .winner-pills { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
-    .winner-pill {
+    .score-cell.disabled:hover { background: transparent !important; }
+    
+    /* Turn marker triangle in header */
+    .turn-marker {
+      color: #ffd861;
       font-size: 10px;
-      padding: 3px 8px;
-      border-radius: 10px;
-      background: rgba(36, 50, 84, 0.4);
-      border: 1px solid var(--border);
+      vertical-align: middle;
+      margin-right: 2px;
     }
-    .winner-pill .w-name { color: var(--gold); font-weight: 700; }
-    .winner-pill .w-count { color: var(--text-dim); margin-left: 4px; }
-    .footer {
-      margin-top: 30px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      font-size: 11px;
-      color: var(--text-dim);
-      letter-spacing: .1em;
-    }
-    .footer .version { font-size: 10px; opacity: 0.6; margin-top: 4px; }
     
-    /* Supabase status row */
-    .supa-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      font-size: 12px;
-      border-radius: 8px;
-      background: var(--panel);
-      border: 1px solid var(--border);
+    /* Action bar */
+    .action-bar {
+      display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap;
     }
-    /* Compact status that lives in the header */
-    .supa-status-mini {
-      position: absolute;
-      top: 18px;
-      left: 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      font-size: 11px;
-      border-radius: 6px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      max-width: 140px;
-    }
-    .supa-status-mini .supa-text-mini {
-      color: var(--text-dim);
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .supa-status-mini .supa-text-mini.ok { color: #2ecc71; }
-    .supa-status-mini .supa-text-mini.error { color: var(--red); }
-    .supa-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      display: inline-block;
-      flex: 0 0 10px;
-      transition: background 0.3s;
-    }
-    .supa-dot.ok { background: #2ecc71; box-shadow: 0 0 6px rgba(46, 204, 113, 0.6); }
-    .supa-dot.error { background: var(--red); box-shadow: 0 0 6px rgba(231, 76, 60, 0.6); }
-    #supa-text { color: var(--text-dim); flex: 1; }
-    #supa-text.ok { color: #2ecc71; }
-    #supa-text.error { color: var(--red); }
-    .no-supabase {
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 12px;
-      padding: 14px 0;
-    }
-    .no-supabase a { color: var(--gold); text-decoration: none; border-bottom: 1px dashed var(--gold); cursor: pointer; }
+    .action-bar .btn { flex: 1; min-width: 120px; }
     
-    /* Settings modal */
+    /* Modal */
     .modal-overlay {
-      display: none;
       position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(44, 42, 37, 0.55);
+      backdrop-filter: blur(2px);
+      display: none; align-items: center; justify-content: center;
       z-index: 100;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 20px;
-      overflow-y: auto;
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: var(--bg);
-      border: 1px solid var(--border2);
-      border-radius: 12px;
-      max-width: 480px;
-      width: 100%;
-      padding: 22px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 20px; max-width: 440px; width: 94%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      max-height: 90vh; overflow-y: auto;
     }
-    .modal h2 {
-      margin: 0 0 4px 0;
-      font-size: 18px;
-      color: var(--gold);
-      letter-spacing: .08em;
+    .modal h3 { margin: 0 0 8px; font-size: 16px; }
+    .modal .cat-detail { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; font-style: italic; }
+    .modal .score-input { font-size: 28px; text-align: center; padding: 12px; }
+    .modal .quick-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; justify-content: center; }
+    .modal .quick-btn {
+      background: var(--row-alt); border: 1px solid var(--border);
+      padding: 8px 12px; border-radius: 6px;
+      cursor: pointer; min-width: 38px; font-weight: 500;
     }
-    .modal .modal-sub {
-      font-size: 12px;
-      color: var(--text-dim);
-      margin-bottom: 18px;
+    .modal .quick-btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+    .modal .quick-btn.zero { background: var(--panel); border-color: var(--red); color: var(--red); }
+    .modal .modal-buttons { display: flex; gap: 8px; margin-top: 12px; }
+    .modal .modal-buttons .btn { flex: 1; }
+    
+    /* Modal picker rows */
+    .picker-instructions { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 8px; font-style: italic; }
+    .picker-rows { display: flex; flex-direction: column; gap: 5px; margin: 8px 0 12px; }
+    .picker-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--panel); cursor: pointer;
+      transition: background .12s, border-color .12s;
     }
-    .modal label {
-      display: block;
-      font-size: 11px;
-      letter-spacing: .12em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-top: 12px;
-      margin-bottom: 4px;
+    .picker-row:not(.picker-row-static):hover {
+      background: var(--accent-soft); border-color: var(--accent);
     }
-    .modal input {
-      width: 100%;
-      background: rgba(10, 14, 26, 0.6);
-      border: 1px solid var(--border2);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 9px 11px;
-      font-size: 13px;
-      font-family: inherit;
+    .picker-row.picker-skip { border-style: dashed; }
+    .picker-row.picker-skip:hover { background: #fbeceb; border-color: var(--red); }
+    .picker-row-static { cursor: default; justify-content: center; }
+    .picker-row-static:hover { background: var(--panel); border-color: var(--border); }
+    .picker-dice {
+      flex: 1; display: flex; gap: 4px; align-items: center; justify-content: flex-start;
+      flex-wrap: wrap; min-height: 30px;
     }
-    .modal input:focus { outline: none; border-color: var(--gold); }
-    .modal .help {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 10px;
-      line-height: 1.5;
+    .picker-skip-label { color: var(--text-dim); font-style: italic; font-size: 13px; justify-content: center; }
+    .picker-score {
+      min-width: 36px; text-align: right; font-weight: 700; font-size: 16px; color: var(--text);
     }
-    .modal-actions {
-      display: flex;
+    
+    /* Two-column picker for 2 Pairs / Full House */
+    .picker-2col {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0;
+    }
+    .picker-col { display: flex; flex-direction: column; gap: 4px; }
+    .picker-col-label {
+      font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text-dim); text-align: center; margin-bottom: 4px;
+    }
+    .picker-row.picker-sub {
+      padding: 5px 8px; gap: 4px;
+    }
+    .picker-row.picker-sub .picker-dice { gap: 3px; }
+    .picker-row.selected {
+      background: var(--accent); border-color: var(--accent);
+    }
+    .picker-row.selected .picker-dice svg rect { fill: rgba(255,255,255,0.95); }
+    .picker-row.disabled {
+      opacity: 0.35; cursor: not-allowed; background: var(--row-alt);
+    }
+    .picker-row.disabled:hover { background: var(--row-alt); border-color: var(--border); }
+    
+    .picker-total-row {
+      text-align: center; padding: 8px 0; border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+    .picker-total {
+      display: inline-block; font-size: 24px; font-weight: 700; color: var(--text);
+      min-width: 50px; padding: 4px 12px;
+    }
+    .picker-action-row { display: flex; gap: 8px; margin-top: 10px; }
+    .picker-action-row .btn { flex: 1; }
+    
+    /* Chance picker — tappable dice-styled tiles showing possible totals 5-30 */
+    .chance-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
       gap: 8px;
-      margin-top: 18px;
+      margin: 12px 0;
     }
-    .modal-actions button, .modal-actions a {
-      flex: 1;
-      padding: 10px 14px;
-      border-radius: 6px;
-      border: 1px solid var(--border2);
-      background: rgba(36, 50, 84, 0.5);
-      color: var(--text);
-      font-size: 13px;
-      font-weight: 600;
+    .chance-tile {
+      aspect-ratio: 1 / 1;
       cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s;
-      text-decoration: none;
-      text-align: center;
+      background: #ffffff;
+      border: 2px solid var(--text);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .12s, transform .06s, border-color .12s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .modal-actions button:hover, .modal-actions a:hover {
-      background: rgba(36, 50, 84, 0.8);
-      color: var(--gold);
-      border-color: var(--gold);
+    .chance-tile:hover { background: var(--accent-soft); border-color: var(--accent); }
+    .chance-tile:active { transform: scale(0.94); }
+    .chance-tile-inner {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
     }
-    .modal-actions button.primary {
-      background: var(--gold);
-      color: #000;
-      border-color: var(--gold);
+    
+    /* Yatzy big label */
+    .yatzy-label {
+      font-size: 36px; font-weight: 900; letter-spacing: .15em;
+      color: var(--red); text-align: center; padding: 14px 0;
     }
-    .modal-actions button.primary:hover {
-      background: #f0c528;
-      color: #000;
+    
+    /* Scale picker dice down a bit on small screens */
+    @media (max-width: 600px) {
+      .picker-dice svg { width: 22px !important; height: 22px !important; }
+      .picker-row { padding: 7px 10px; }
+      .picker-score { font-size: 14px; }
+      .picker-2col .picker-dice svg { width: 18px !important; height: 18px !important; }
+      .chance-grid { gap: 6px; grid-template-columns: repeat(5, 1fr); }
+      .chance-tile-inner { font-size: 18px; }
     }
-    .modal-actions button.danger {
-      flex: 0;
-      padding: 10px 12px;
-      color: var(--red);
-      border-color: rgba(231, 76, 60, 0.4);
+    
+    /* History/stats */
+    .stats-row {
+      display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: 8px; padding: 10px 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
     }
-    .modal-actions button.danger:hover {
-      background: rgba(231, 76, 60, 0.15);
-      color: var(--red);
-      border-color: var(--red);
+    .stats-row.header { font-weight: 700; background: var(--row-alt); border-radius: 6px 6px 0 0; }
+    .stats-row .name { font-weight: 600; }
+    
+    .footer { text-align: center; padding: 20px 0; color: var(--text-dim); font-size: 11px; }
+    
+    /* Screens */
+    .screen { display: none; }
+    .screen.active { display: block; }
+    
+    @media (max-width: 600px) {
+      .score-table th, .score-table td { padding: 3px 2px; font-size: 18px; }
+      .score-table th { padding: 6px 2px; }
+      .score-table th.cat-header, .score-table td.cat-name { width: 30%; padding-left: 8px; font-size: 11px; }
+      .score-table tr.row-total td { font-size: 19px; }
+      .score-table tr.row-bonus td { font-size: 16px; }
+      .hdr h1 { font-size: 18px; }
+      .stats-row { grid-template-columns: 1.5fr 0.7fr 0.7fr 1fr 1fr; font-size: 12px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    
     <div class="hdr">
-      <h1>BOARD GAME ASSISTANT</h1>
-      <div class="sub">Companion tools for tabletop nights</div>
+      <a href="../" class="back-btn" title="Back to Board Game Assistant front page">⮌</a>
+      <h1>YATZY</h1>
+      <div class="sub">Swedish Scorecard</div>
       <div class="supa-status-mini" id="supa-status">
         <span class="supa-dot" id="supa-dot"></span>
-        <span class="supa-text-mini" id="supa-text">Checking…</span>
-      </div>
-      <button class="gear-btn" id="btn-gear" title="Settings">⚙</button>
-    </div>
-    
-    <div class="user-panel">
-      <label for="username">USER</label>
-      <input type="text" id="username" placeholder="Enter your username" maxlength="20" autocomplete="off">
-    </div>
-    
-    <!-- ============ ADMIN SECTION ============ -->
-    <div class="admin-frame">
-      <div class="admin-label">ADMIN</div>
-      <div class="games" id="games-grid">
-        
-        <!-- Twilight Imperium IV -->
-        <div class="game-card available" data-game="ti4">
-          <div class="game-emoji">🚀</div>
-          <div class="game-title">Twilight Imperium IV</div>
-          <div class="game-desc">Score tracker · faction reference · voting · live sync</div>
-          <div class="game-game-stats" id="game-stats-ti4"></div>
-          <div class="game-actions">
-            <a href="ti4/?admin=1">Companion</a>
-            <a class="disabled" title="Setup guide coming soon">Setup Guide</a>
-          </div>
-        </div>
-        
-        <!-- Yatzy -->
-        <div class="game-card" data-game="yatzy">
-          <div class="game-emoji">🎲</div>
-          <div class="game-title">Yatzy</div>
-          <div class="game-desc">Swedish scorecard · 15 categories · player stats</div>
-          <div class="game-actions">
-            <a href="yatzy/">ScoreCard</a>
-          </div>
-        </div>
-        
-        <!-- Small World (placeholder) -->
-        <div class="game-card placeholder" data-game="smallworld">
-          <div class="game-emoji">🗺</div>
-          <div class="game-title">Small World</div>
-          <div class="game-desc">Race + power picker · round-by-round VP tracker</div>
-          <div class="game-actions">
-            <a class="disabled">Companion</a>
-            <a class="disabled">Setup Guide</a>
-          </div>
-        </div>
-        
+        <span id="supa-text">Checking…</span>
       </div>
     </div>
     
-    <!-- ============ GUEST BUTTON ============ -->
-    <button class="big-guest-btn" id="btn-guest">🎲 Join as Guest</button>
+    <!-- Setup screen -->
+    <div id="screen-setup" class="screen active">
+      <div id="resume-banner" style="display:none">
+        <div class="panel" style="border-color:var(--accent);background:var(--accent-soft)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:24px">↺</div>
+            <div style="flex:1">
+              <div style="font-weight:600">Game in progress</div>
+              <div class="dim small" id="resume-detail">Tap Resume to continue</div>
+            </div>
+          </div>
+          <div class="action-bar" style="margin-top:10px">
+            <button class="btn primary" id="btn-resume">Resume Game</button>
+            <button class="btn danger" id="btn-discard-resume">Discard</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-title">Players (2-5)</div>
+      <div class="panel">
+        <div id="player-inputs"></div>
+        <button class="btn full sm" id="btn-add-player" style="margin-top:8px">+ Add Player</button>
+      </div>
+      <div class="action-bar">
+        <button class="btn primary" id="btn-start">Start Game</button>
+        <button class="btn" id="btn-view-stats">View Stats</button>
+      </div>
+    </div>
     
-    <div class="section-h">Global Stats</div>
-    <div class="stats-panel" id="stats-panel">
-      <div class="stats-loading" id="stats-loading">Loading stats…</div>
+    <!-- Game screen -->
+    <div id="screen-game" class="screen">
+      <div class="scorecard">
+        <table class="score-table" id="score-table"></table>
+      </div>
+      <div class="action-bar">
+        <button class="btn primary" id="btn-end-game">End Game & Save</button>
+        <button class="btn danger" id="btn-cancel-game">Cancel Game</button>
+      </div>
+    </div>
+    
+    <!-- Stats screen -->
+    <div id="screen-stats" class="screen">
+      <div class="section-title">Player Stats</div>
+      <div class="panel" id="stats-panel">
+        <div class="dim center" style="padding:20px">Loading stats…</div>
+      </div>
+      <div class="action-bar">
+        <button class="btn" id="btn-stats-back">⮌ Back</button>
+      </div>
     </div>
     
     <div class="footer">
-      Board Game Assistant
-      <div class="version">v2.0.13</div>
-    </div>
-    
-  </div>
-  
-  <!-- Guest join modal -->
-  <div class="modal-overlay" id="guest-modal">
-    <div class="modal">
-      <h2>🎲 Join as Guest</h2>
-      <div class="modal-sub">Enter the room code from your game's admin — we'll route you to the right game automatically.</div>
-      
-      <label for="inp-room-code">Room Code</label>
-      <input type="text" id="inp-room-code" placeholder="ABCDEF" maxlength="6" autocomplete="off" style="text-align:center;font-size:22px;letter-spacing:.25em;text-transform:uppercase;font-weight:700">
-      
-      <div class="help" id="guest-help">
-        The code is 6 letters/digits — case doesn't matter.
-      </div>
-      
-      <div class="modal-actions">
-        <button id="btn-guest-cancel">Cancel</button>
-        <button class="primary" id="btn-guest-join">Join</button>
-      </div>
+      Yatzy Scorecard
+      <div class="version">v1.6.1</div>
     </div>
   </div>
   
-  <!-- Settings modal -->
-  <div class="modal-overlay" id="settings-modal">
-    <div class="modal">
-      <h2>⚙ Supabase Settings</h2>
-      <div class="modal-sub">Connect to your Supabase project. These credentials are shared across all games.</div>
-      
-      <label for="inp-url">Project URL</label>
-      <input type="url" id="inp-url" placeholder="https://abcdefghij.supabase.co">
-      
-      <label for="inp-key">Anon Key</label>
-      <input type="text" id="inp-key" placeholder="eyJ...">
-      
-      <div class="help">
-        Find these in your Supabase project → <b>Settings</b> → <b>API Keys</b>. Use just the base URL (no <code>/rest/v1/</code>). Make sure you've run the <code>ti4/supabase-setup.sql</code> script first.
-      </div>
-      
-      <div class="modal-actions">
-        <button class="danger" id="btn-cache" title="Clear app cache and reload">↺</button>
-        <button id="btn-cancel">Cancel</button>
-        <button class="primary" id="btn-save">Save</button>
-      </div>
-    </div>
+  <!-- Modal for entering scores -->
+  <div class="modal-overlay" id="score-modal-overlay">
+    <div class="modal" id="score-modal"></div>
   </div>
   
   <script>
-    // ===== Username (shared across games via localStorage) =====
-    var STORAGE_KEY_USERNAME = 'bg_username';
-    function loadUsername() {
-      try { return localStorage.getItem(STORAGE_KEY_USERNAME) || ''; }
-      catch (e) { return ''; }
-    }
-    function saveUsername(v) {
-      try { localStorage.setItem(STORAGE_KEY_USERNAME, v); } catch (e) {}
-    }
-    var inp = document.getElementById('username');
-    inp.value = loadUsername();
-    inp.addEventListener('input', function() {
-      saveUsername(this.value.trim());
-    });
+    // =============================================================================
+    // SWEDISH YATZY — Category definitions
+    // =============================================================================
+    var VERSION = '1.6.1';
     
-    // ===== Username required guard =====
-    // Block clicks on any interactive element (companion links, guest button, gear)
-    // until a username has been entered. Pop a warning and focus the username field.
-    function hasUsername() {
-      return (inp.value || '').trim().length > 0;
-    }
-    document.addEventListener('click', function(e) {
-      if (hasUsername()) return;
-      // Allow clicks inside the username panel (to focus the field)
-      if (e.target.closest('.user-panel')) return;
-      // Allow clicks inside any modal (settings, guest join, etc) — modals have their own validation
-      if (e.target.closest('.modal-overlay')) return;
-      // Block any clickable target: links, buttons (game cards, gear, guest button)
-      var clickable = e.target.closest('a, button');
-      if (!clickable) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      alert('Please enter your username first.');
-      inp.focus();
-    }, true); // capture phase so we run before the element's own click handlers
+    var CATEGORIES = [
+      { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
+      { key: 'twos',    name: 'Twos',          dice: 2, group: 'upper', max: 10 },
+      { key: 'threes',  name: 'Threes',        dice: 3, group: 'upper', max: 15 },
+      { key: 'fours',   name: 'Fours',         dice: 4, group: 'upper', max: 20 },
+      { key: 'fives',   name: 'Fives',         dice: 5, group: 'upper', max: 25 },
+      { key: 'sixes',   name: 'Sixes',         dice: 6, group: 'upper', max: 30 },
+      { key: 'pair',    name: 'Pair',                   group: 'lower', max: 12 },
+      { key: 'twoPair', name: '2 Pairs',                group: 'lower', max: 22 },
+      { key: 'three',   name: '3 of Kind',              group: 'lower', max: 18 },
+      { key: 'four',    name: '4 of Kind',              group: 'lower', max: 24 },
+      { key: 'smallSt', name: 'Sm. Straight',           group: 'lower', max: 15, fixed: 15 },
+      { key: 'largeSt', name: 'Lg. Straight',           group: 'lower', max: 20, fixed: 20 },
+      { key: 'house',   name: 'Full House',             group: 'lower', max: 28 },
+      { key: 'chance',  name: 'Chance',                 group: 'lower', max: 30 },
+      { key: 'yatzy',   name: 'Yatzy',                  group: 'lower', max: 50, fixed: 50 }
+    ];
     
-    // ===== IndexedDB (shared with TI4 — same DB name, same store) =====
+    var PLAYER_COLORS = ['#c0473f', '#1f6fad', '#7a4ba8', '#b89734', '#2e8c66'];
+    
+    // =============================================================================
+    // STATE
+    // =============================================================================
+    var state = {
+      players: [],          // [{ name, scores: { categoryKey: number|null } }]
+      currentPlayerIdx: 0,  // whose turn it is right now
+      started: false,
+      ended: false,
+      startTime: null,
+      endTime: null
+    };
+    
+    var supabase = null;
+    var STORAGE_KEY_DB = 'bg-assistant';
+    
+    // -------------------------------------------------------------
+    // Local persistence (localStorage) — survives page refresh
+    //   yatzy-players : last used player name list (default for new games)
+    //   yatzy-state   : in-progress game snapshot (cleared on End / Cancel)
+    // -------------------------------------------------------------
+    var LS_PLAYERS = 'bg-settings:yatzy-players';
+    var LS_STATE   = 'bg-settings:yatzy-state';
+    
+    function saveLastPlayerNames() {
+      try {
+        var names = (state.players || []).map(function(p) { return p.name; });
+        if (!names.length) names = window._setupNames || [];
+        if (names.length >= 2) localStorage.setItem(LS_PLAYERS, JSON.stringify(names));
+      } catch (e) {}
+    }
+    function loadLastPlayerNames() {
+      try {
+        var raw = localStorage.getItem(LS_PLAYERS);
+        if (!raw) return null;
+        var arr = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.length >= 2) return arr;
+      } catch (e) {}
+      return null;
+    }
+    
+    function saveGameState() {
+      if (!state.started || state.ended) return;
+      try {
+        localStorage.setItem(LS_STATE, JSON.stringify(state));
+      } catch (e) {}
+    }
+    function loadSavedGameState() {
+      try {
+        var raw = localStorage.getItem(LS_STATE);
+        if (!raw) return null;
+        var s = JSON.parse(raw);
+        if (s && s.started && !s.ended && Array.isArray(s.players) && s.players.length >= 2) return s;
+      } catch (e) {}
+      return null;
+    }
+    function clearGameState() {
+      try { localStorage.removeItem(LS_STATE); } catch (e) {}
+    }
+    
+    // =============================================================================
+    // IndexedDB + localStorage shadow (same pattern as TI4)
+    // =============================================================================
+    var _db = null;
     function openDB() {
       return new Promise(function(resolve, reject) {
-        // Shared DB for the Board Game Assistant (all games read/write here)
-        var req = indexedDB.open('bg-assistant', 1);
+        if (_db) { resolve(_db); return; }
+        var req = indexedDB.open(STORAGE_KEY_DB, 1);
         req.onupgradeneeded = function(e) {
           var d = e.target.result;
           if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings', { keyPath: 'k' });
           if (!d.objectStoreNames.contains('history'))  d.createObjectStore('history', { keyPath: 'id', autoIncrement: true });
           if (!d.objectStoreNames.contains('logs'))     d.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
         };
-        req.onsuccess = function(e) { resolve(e.target.result); };
-        req.onerror = function() { reject(); };
+        req.onsuccess = function(e) { _db = e.target.result; resolve(_db); };
+        req.onerror = function() { reject(req.error); };
       });
     }
-    
     function dbGet(store, key) {
-      return openDB().then(function(d) {
-        return new Promise(function(resolve) {
-          try {
-            var r = d.transaction(store).objectStore(store).get(key);
-            r.onsuccess = function() {
-              var rec = r.result;
-              if (rec) { resolve(rec); return; }
-              // Fall back to localStorage shadow
-              try {
-                var ls = localStorage.getItem('bg-settings:' + key);
-                if (ls != null) resolve({ k: key, v: ls });
-                else resolve(null);
-              } catch (e) { resolve(null); }
-            };
-            r.onerror = function() {
-              try {
-                var ls = localStorage.getItem('bg-settings:' + key);
-                if (ls != null) resolve({ k: key, v: ls });
-                else resolve(null);
-              } catch (e) { resolve(null); }
-            };
-          } catch (e) {
-            try {
-              var ls2 = localStorage.getItem('bg-settings:' + key);
-              if (ls2 != null) resolve({ k: key, v: ls2 });
-              else resolve(null);
-            } catch (e2) { resolve(null); }
+      function readLs() {
+        if (store !== 'settings') return null;
+        try {
+          var ls = localStorage.getItem('bg-settings:' + key);
+          if (ls == null) return null;
+          if (ls.indexOf('__json__') === 0) {
+            try { return { k: key, v: JSON.parse(ls.substring(8)) }; } catch (e) { return null; }
           }
-        });
-      }).catch(function() {
-        // openDB failed entirely — try localStorage as last resort
-        return new Promise(function(resolve) {
-          try {
-            var ls = localStorage.getItem('bg-settings:' + key);
-            if (ls != null) resolve({ k: key, v: ls });
-            else resolve(null);
-          } catch (e) { resolve(null); }
-        });
-      });
-    }
-    function dbSet(store, rec) {
-      // Always shadow to localStorage so settings never disappear even if IndexedDB fails
-      if (store === 'settings' && rec && rec.k && typeof rec.v === 'string') {
-        try { localStorage.setItem('bg-settings:' + rec.k, rec.v); } catch (e) {}
+          return { k: key, v: ls };
+        } catch (e) { return null; }
       }
       return openDB().then(function(d) {
         return new Promise(function(resolve) {
           try {
-            var r = d.transaction(store, 'readwrite').objectStore(store).put(rec);
-            r.onsuccess = function() { resolve(true); };
-            r.onerror = function() { resolve(false); };
-          } catch (e) { resolve(false); }
+            var r = d.transaction(store).objectStore(store).get(key);
+            r.onsuccess = function() { resolve(r.result || readLs()); };
+            r.onerror = function() { resolve(readLs()); };
+          } catch (e) { resolve(readLs()); }
         });
-      }).catch(function() { return false; });
+      }).catch(function() { return readLs(); });
     }
     
-    // ===== Supabase loader =====
-    var supabaseClient = null;
+    // =============================================================================
+    // SUPABASE
+    // =============================================================================
     function loadSupabase(url, key) {
       return new Promise(function(resolve, reject) {
         if (window.supabase && window.supabase.createClient) {
@@ -666,450 +558,931 @@
         var s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
         s.onload = function() {
-          try { resolve(window.supabase.createClient(url, key)); }
-          catch (e) { reject(e); }
+          try { resolve(window.supabase.createClient(url, key)); } catch (e) { reject(e); }
         };
         s.onerror = function() { reject(new Error('Could not load Supabase library')); };
         document.head.appendChild(s);
       });
     }
     
-    // ===== Settings modal =====
-    function openSettings() {
-      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
-        document.getElementById('inp-url').value = (results[0] && results[0].v) || '';
-        document.getElementById('inp-key').value = (results[1] && results[1].v) || '';
-        document.getElementById('settings-modal').classList.add('open');
-      });
-    }
-    function closeSettings() {
-      document.getElementById('settings-modal').classList.remove('open');
-    }
-    document.getElementById('btn-gear').addEventListener('click', openSettings);
-    document.getElementById('btn-cancel').addEventListener('click', closeSettings);
-    
-    // ===== Guest join =====
-    function openGuestModal() {
-      document.getElementById('inp-room-code').value = '';
-      document.getElementById('guest-help').innerHTML = 'The code is 6 letters/digits — case doesn\'t matter.';
-      document.getElementById('guest-help').style.color = '';
-      document.getElementById('guest-modal').classList.add('open');
-      setTimeout(function() { document.getElementById('inp-room-code').focus(); }, 100);
-    }
-    function closeGuestModal() {
-      document.getElementById('guest-modal').classList.remove('open');
-    }
-    document.getElementById('btn-guest').addEventListener('click', function() {
-      // Need supabase to look up room
-      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
+    function initSupabase() {
+      return Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
         var url = results[0] && results[0].v;
         var key = results[1] && results[1].v;
+        // Also check localStorage fallback for credentials saved by front page
+        if (!url) { try { url = localStorage.getItem('bg-settings:url'); } catch (e) {} }
+        if (!key) { try { key = localStorage.getItem('bg-settings:key'); } catch (e) {} }
         if (!url || !key) {
-          alert('Please configure Supabase settings first (⚙ gear icon).');
-          openSettings();
-          return;
+          setSupaStatus('error', 'Not configured', 'Set up Supabase on the Board Game Assistant front page');
+          return null;
         }
-        openGuestModal();
-      });
-    });
-    document.getElementById('btn-guest-cancel').addEventListener('click', closeGuestModal);
-    document.getElementById('guest-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeGuestModal();
-    });
-    
-    // Routing table: for each known game type, where to redirect with the guest room code
-    var GUEST_ROOM_TABLES = [
-      { gameType: 'ti4',        table: 'ti4_rooms',        path: 'ti4/?guest=' }
-      // Add future game lookups here, e.g.:
-      // { gameType: 'catan',      table: 'catan_rooms',      path: 'catan/?guest=' },
-      // { gameType: 'smallworld', table: 'smallworld_rooms', path: 'smallworld/?guest=' }
-    ];
-    
-    function joinAsGuest() {
-      var input = document.getElementById('inp-room-code');
-      var code = (input.value || '').trim().toUpperCase();
-      var help = document.getElementById('guest-help');
-      if (!code || code.length < 4) {
-        help.innerHTML = 'Please enter a valid room code (at least 4 characters).';
-        help.style.color = 'var(--red)';
-        return;
-      }
-      var btn = document.getElementById('btn-guest-join');
-      btn.disabled = true; btn.textContent = 'Looking up...';
-      help.style.color = 'var(--text-dim)';
-      help.innerHTML = 'Searching for room ' + escapeHtml(code) + '…';
-      
-      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
-        var url = results[0] && results[0].v;
-        var key = results[1] && results[1].v;
-        if (!url || !key) throw new Error('Supabase not configured');
-        return loadSupabase(url, key);
-      }).then(function(client) {
-        // Try each game's room table in sequence
-        var idx = 0;
-        function tryNext() {
-          if (idx >= GUEST_ROOM_TABLES.length) {
-            help.style.color = 'var(--red)';
-            help.innerHTML = 'Room <b>' + escapeHtml(code) + '</b> not found in any game. Check the code and try again.';
-            btn.disabled = false; btn.textContent = 'Join';
-            return;
-          }
-          var entry = GUEST_ROOM_TABLES[idx++];
-          client.from(entry.table).select('room_code').eq('room_code', code).maybeSingle().then(function(r) {
-            if (r.error || !r.data) {
-              tryNext();
-              return;
-            }
-            // Found it! Redirect.
-            help.innerHTML = 'Found in <b>' + entry.gameType.toUpperCase() + '</b> — joining…';
-            help.style.color = 'var(--gold)';
-            setTimeout(function() {
-              location.href = entry.path + encodeURIComponent(code);
-            }, 400);
-          }).catch(function() { tryNext(); });
-        }
-        tryNext();
-      }).catch(function(e) {
-        help.style.color = 'var(--red)';
-        help.innerHTML = 'Could not search: ' + escapeHtml(e && e.message ? e.message : 'unknown error');
-        btn.disabled = false; btn.textContent = 'Join';
-      });
-    }
-    document.getElementById('btn-guest-join').addEventListener('click', joinAsGuest);
-    document.getElementById('inp-room-code').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') joinAsGuest();
-    });
-    
-    document.getElementById('btn-save').addEventListener('click', function() {
-      var url = document.getElementById('inp-url').value.trim().replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '');
-      var key = document.getElementById('inp-key').value.trim();
-      if (!url || !key) { alert('Please enter URL and key'); return; }
-      if (!url.match(/^https:\/\//)) { alert('URL must start with https://'); return; }
-      var btn = this;
-      btn.disabled = true; btn.textContent = 'Saving...';
-      // Save first — credentials always get persisted regardless of network outcome
-      Promise.all([
-        dbSet('settings', { k: 'url', v: url }),
-        dbSet('settings', { k: 'key', v: key })
-      ]).then(function() {
-        // Verify by reading back
-        return Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]);
-      }).then(function(verify) {
-        if (!verify[0] || verify[0].v !== url) {
-          throw new Error('Settings did not save correctly (url read-back failed)');
-        }
-        // Now optimistically try a connection but don't fail-on-error
-        btn.textContent = 'Validating...';
         return loadSupabase(url, key).then(function(c) {
-          return c.from('ti4_history').select('id').limit(1).catch(function(){return null;});
-        }).catch(function() { return null; });
-      }).then(function() {
-        closeSettings();
-        initStats();
-        pingSupabase();
-        btn.disabled = false; btn.textContent = 'Save';
-      }).catch(function(e) {
-        alert('Save failed: ' + (e && e.message ? e.message : 'unknown error'));
-        btn.disabled = false; btn.textContent = 'Save';
-      });
-    });
-    
-    document.getElementById('btn-cache').addEventListener('click', function() {
-      if (!confirm('Clear app cache and reload?\n\nThis unregisters service workers, clears caches, AND wipes the local browser database. You will need to re-enter your Supabase URL and key.')) return;
-      var go = function() { location.href = location.pathname + '?v=' + Date.now(); };
-      function deleteBgDb() {
-        return new Promise(function(resolve) {
-          // Best-effort: try to delete bg-assistant, ti4, ti4tracker just to be thorough
-          var names = ['bg-assistant', 'ti4', 'ti4tracker'];
-          var remaining = names.length;
-          names.forEach(function(n) {
-            try {
-              var req = indexedDB.deleteDatabase(n);
-              req.onsuccess = req.onerror = req.onblocked = function() {
-                remaining--;
-                if (remaining === 0) resolve();
-              };
-            } catch (e) {
-              remaining--;
-              if (remaining === 0) resolve();
-            }
-          });
-          // Safety net: never block more than 3s
-          setTimeout(resolve, 3000);
-        });
-      }
-      function clearSwsAndCaches() {
-        if (!('serviceWorker' in navigator)) return Promise.resolve();
-        return navigator.serviceWorker.getRegistrations().then(function(regs) {
-          return Promise.all(regs.map(function(r) { return r.unregister(); }));
-        }).then(function() {
-          if (!('caches' in window)) return;
-          return caches.keys().then(function(keys) {
-            return Promise.all(keys.map(function(k) { return caches.delete(k); }));
-          });
-        });
-      }
-      Promise.all([deleteBgDb(), clearSwsAndCaches()]).then(go).catch(go);
-    });
-    
-    // Close settings modal when clicking backdrop
-    document.getElementById('settings-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeSettings();
-    });
-    
-    // ===== Stats rendering =====
-    function statsEmptyMessage() {
-      return '<div class="stats-empty">No games recorded yet — stats will appear here once you finish your first game.</div>';
-    }
-    function statsNoSupabaseMessage() {
-      return '<div class="no-supabase">Stats need Supabase access. <a href="#" id="link-open-settings" style="cursor:pointer">Open Settings</a> to enter your Supabase URL and key.</div>';
-    }
-    // Attach click listener via delegation so it works no matter when the link is added/replaced
-    document.addEventListener('click', function(e) {
-      var t = e.target;
-      if (t && t.id === 'link-open-settings') {
-        e.preventDefault();
-        openSettings();
-      }
-    });
-    
-    function renderStatsFromRows(rows) {
-      var panel = document.getElementById('stats-panel');
-      if (!rows || !rows.length) {
-        panel.innerHTML = statsEmptyMessage();
-        renderGameStats(null);
-        return;
-      }
-      
-      var total = rows.length;
-      var byGame = {};
-      var winnerCounts = {};
-      var perGameStats = {};
-      var lastPlayedRow = rows[0];
-      
-      rows.forEach(function(r) {
-        var gt = r.game_type || 'unknown';
-        byGame[gt] = (byGame[gt] || 0) + 1;
-        if (r.winner) winnerCounts[r.winner] = (winnerCounts[r.winner] || 0) + 1;
-        if (!perGameStats[gt]) perGameStats[gt] = { count: 0, lastPlayedAt: null, lastWinner: null };
-        perGameStats[gt].count += 1;
-        if (!perGameStats[gt].lastPlayedAt || new Date(r.played_at) > new Date(perGameStats[gt].lastPlayedAt)) {
-          perGameStats[gt].lastPlayedAt = r.played_at;
-          perGameStats[gt].lastWinner = r.winner;
-        }
-        if (!lastPlayedRow || new Date(r.played_at) > new Date(lastPlayedRow.played_at)) {
-          lastPlayedRow = r;
-        }
-      });
-      
-      var gameTypeLabel = { ti4: 'TI4', yatzy: 'Yatzy', smallworld: 'Small World' };
-      var gameBreakdown = Object.keys(byGame).map(function(k) {
-        return { type: k, count: byGame[k] };
-      }).sort(function(a, b) { return b.count - a.count; });
-      
-      var topWinners = Object.keys(winnerCounts).map(function(name) {
-        return { name: name, count: winnerCounts[name] };
-      }).sort(function(a, b) { return b.count - a.count; }).slice(0, 3);
-      
-      var h = '<div class="stats-row">';
-      h += '<div class="stat-item"><div class="stat-value">' + total + '</div><div class="stat-label">Total Games</div></div>';
-      gameBreakdown.forEach(function(g) {
-        var lbl = gameTypeLabel[g.type] || g.type;
-        h += '<div class="stat-item"><div class="stat-value">' + g.count + '</div><div class="stat-label">' + lbl + '</div></div>';
-      });
-      h += '</div>';
-      
-      if (lastPlayedRow) {
-        var lpLabel = gameTypeLabel[lastPlayedRow.game_type] || lastPlayedRow.game_type;
-        h += '<div class="last-played">Last played: <b>' + lpLabel + '</b>';
-        if (lastPlayedRow.winner) h += ' · winner <b>' + escapeHtml(lastPlayedRow.winner) + '</b>';
-        h += ' · ' + formatRelative(lastPlayedRow.played_at) + '</div>';
-      }
-      
-      if (topWinners.length) {
-        h += '<div class="winner-pills">';
-        topWinners.forEach(function(w) {
-          h += '<div class="winner-pill"><span class="w-name">' + escapeHtml(w.name) + '</span><span class="w-count">' + w.count + ' win' + (w.count > 1 ? 's' : '') + '</span></div>';
-        });
-        h += '</div>';
-      }
-      
-      panel.innerHTML = h;
-      renderGameStats(perGameStats);
-    }
-    
-    function renderGameStats(perGame) {
-      var ti4Stats = document.getElementById('game-stats-ti4');
-      if (!ti4Stats) return;
-      if (perGame && perGame.ti4) {
-        var p = perGame.ti4;
-        var line = '<b>' + p.count + '</b> game' + (p.count > 1 ? 's' : '') + ' played';
-        if (p.lastWinner) line += ' · last won by <b>' + escapeHtml(p.lastWinner) + '</b>';
-        ti4Stats.innerHTML = line;
-        ti4Stats.style.display = '';
-      } else {
-        ti4Stats.style.display = 'none';
-      }
-    }
-    
-    function escapeHtml(s) {
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-    function formatRelative(iso) {
-      var d = new Date(iso);
-      var diffMs = Date.now() - d.getTime();
-      var minutes = Math.floor(diffMs / 60000);
-      if (minutes < 1) return 'just now';
-      if (minutes < 60) return minutes + ' min ago';
-      var hours = Math.floor(minutes / 60);
-      if (hours < 24) return hours + ' hour' + (hours > 1 ? 's' : '') + ' ago';
-      var days = Math.floor(hours / 24);
-      if (days < 30) return days + ' day' + (days > 1 ? 's' : '') + ' ago';
-      var months = Math.floor(days / 30);
-      if (months < 12) return months + ' month' + (months > 1 ? 's' : '') + ' ago';
-      var years = Math.floor(months / 12);
-      return years + ' year' + (years > 1 ? 's' : '') + ' ago';
-    }
-    
-    // ===== Init: load credentials, fetch stats, auto-open settings if missing =====
-    // Stats queries — each game's history table contributes rows. To add a new game later
-    // (e.g. catan_history), add an entry to this list.
-    // Each per-game history table contributes rows to the front-page Global Stats panel.
-    // 'columns' is the SELECT list; 'normalize' maps a row to the unified stats shape.
-    var STATS_SOURCES = [
-      {
-        gameType: 'ti4',
-        table: 'ti4_history',
-        columns: 'played_at, winner, players, rounds, vp_goal',
-        normalize: function(row) {
-          return {
-            game_type: 'ti4',
-            played_at: row.played_at,
-            winner: row.winner,
-            players: row.players,
-            rounds: row.rounds,
-            vp_goal: row.vp_goal
-          };
-        }
-      },
-      {
-        gameType: 'yatzy',
-        table: 'yatzy_history',
-        columns: 'played_at, winner, players, is_draw, max_total, min_total',
-        normalize: function(row) {
-          return {
-            game_type: 'yatzy',
-            played_at: row.played_at,
-            winner: row.winner,
-            players: row.players,
-            is_draw: row.is_draw,
-            max_total: row.max_total,
-            min_total: row.min_total
-          };
-        }
-      }
-      // Future: { gameType: 'smallworld', table: 'smallworld_history', ... }
-    ];
-    
-    function fetchStatsFromAllGames(client) {
-      return Promise.all(STATS_SOURCES.map(function(src) {
-        return client.from(src.table).select(src.columns).order('played_at', { ascending: false }).limit(200).then(function(r) {
-          if (r.error) return [];
-          return (r.data || []).map(src.normalize);
-        }).catch(function() { return []; });
-      })).then(function(perGame) {
-        var merged = [];
-        perGame.forEach(function(rows) { merged = merged.concat(rows); });
-        merged.sort(function(a, b) { return new Date(b.played_at) - new Date(a.played_at); });
-        return merged;
-      });
-    }
-    
-    function initStats() {
-      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
-        var url = results[0] && results[0].v;
-        var key = results[1] && results[1].v;
-        if (!url || !key) {
-          document.getElementById('stats-panel').innerHTML = statsNoSupabaseMessage();
-          // Auto-open the settings modal on first visit
-          if (!window._settingsAutoOpened) {
-            window._settingsAutoOpened = true;
-            setTimeout(openSettings, 300);
-          }
-          return;
-        }
-        loadSupabase(url, key).then(function(client) {
-          supabaseClient = client;
-          fetchStatsFromAllGames(client).then(function(rows) {
-            renderStatsFromRows(rows);
-          }).catch(function(e) {
-            document.getElementById('stats-panel').innerHTML = '<div class="stats-empty">Could not load stats: ' + escapeHtml(e && e.message ? e.message : 'unknown error') + '</div>';
-          });
+          supabase = c;
+          pingSupabase();
+          return c;
         }).catch(function(e) {
-          document.getElementById('stats-panel').innerHTML = '<div class="stats-empty">Could not connect to Supabase: ' + escapeHtml(e && e.message ? e.message : 'unknown error') + '</div>';
+          setSupaStatus('error', 'Error', e.message);
+          return null;
         });
-      }).catch(function() {
-        document.getElementById('stats-panel').innerHTML = statsNoSupabaseMessage();
       });
     }
-    initStats();
-    window.openSettings = openSettings;  // expose for inline link click
     
-    // ===== Supabase status checker (runs every 30s) =====
-    function setSupaStatus(state, msg, fullMsg) {
+    function setSupaStatus(stateName, msg, fullMsg) {
       var dot = document.getElementById('supa-dot');
       var txt = document.getElementById('supa-text');
       dot.classList.remove('ok', 'error');
       txt.classList.remove('ok', 'error');
-      if (state === 'ok') {
-        dot.classList.add('ok');
-        txt.classList.add('ok');
-      } else if (state === 'error') {
-        dot.classList.add('error');
-        txt.classList.add('error');
-      }
+      if (stateName === 'ok') { dot.classList.add('ok'); txt.classList.add('ok'); }
+      else if (stateName === 'error') { dot.classList.add('error'); txt.classList.add('error'); }
       txt.textContent = msg;
-      // Full message is shown on hover/long-press via title attribute
       document.getElementById('supa-status').title = fullMsg || msg;
     }
-    
     function pingSupabase() {
-      Promise.all([dbGet('settings', 'url'), dbGet('settings', 'key')]).then(function(results) {
-        var url = results[0] && results[0].v;
-        var key = results[1] && results[1].v;
-        if (!url || !key) {
-          setSupaStatus('error', 'Not configured', 'Supabase not configured — open ⚙ Settings to set up');
-          return;
-        }
-        return loadSupabase(url, key).then(function(client) {
-          return client.from('ti4_history').select('id').limit(1);
-        }).then(function(r) {
-          if (r.error) {
-            var m = r.error.message || 'unknown error';
-            if (m.toLowerCase().indexOf('ti4_history') >= 0 || m.toLowerCase().indexOf('not exist') >= 0) {
-              setSupaStatus('error', 'Table missing', 'Supabase reachable, but ti4_history table missing — run supabase-setup.sql');
-            } else {
-              setSupaStatus('error', 'Error', 'Supabase error: ' + m);
-            }
+      if (!supabase) return;
+      supabase.from('yatzy_history').select('id').limit(1).then(function(r) {
+        if (r.error) {
+          var m = r.error.message || '';
+          if (m.toLowerCase().indexOf('yatzy_history') >= 0 || m.toLowerCase().indexOf('not exist') >= 0) {
+            setSupaStatus('error', 'Table missing', 'yatzy_history table missing — run supabase-setup.sql');
           } else {
-            setSupaStatus('ok', 'Supabase OK', 'Supabase OK');
+            setSupaStatus('error', 'Error', m);
           }
-        });
-      }).catch(function(e) {
-        var msg = (e && e.message) || 'unknown error';
-        if (msg.toLowerCase().indexOf('fetch') >= 0) {
-          setSupaStatus('error', 'Paused/unreachable', 'Supabase paused or unreachable — check your Supabase dashboard');
         } else {
-          setSupaStatus('error', 'Error', msg);
+          setSupaStatus('ok', 'Supabase OK', 'Supabase OK');
+        }
+      }).catch(function() { setSupaStatus('error', 'Error', 'Network error'); });
+    }
+    setInterval(function() { pingSupabase(); }, 30000);
+    
+    // =============================================================================
+    // SETUP SCREEN
+    // =============================================================================
+    function renderPlayerInputs() {
+      var c = document.getElementById('player-inputs');
+      c.innerHTML = '';
+      var defaults = ['Player 1', 'Player 2'];
+      // Use saved names from previous game session if available
+      var savedNames = loadLastPlayerNames();
+      var names = window._setupNames || (savedNames ? savedNames.slice() : defaults.slice());
+      while (names.length < 2) names.push('Player ' + (names.length + 1));
+      window._setupNames = names;
+      
+      names.forEach(function(n, i) {
+        var row = document.createElement('div');
+        row.className = 'setup-row';
+        row.innerHTML = '<span style="width:14px;height:14px;border-radius:50%;background:' + PLAYER_COLORS[i] + ';flex-shrink:0"></span>' +
+          '<input type="text" value="' + (n || '').replace(/"/g, '&quot;') + '" maxlength="20" placeholder="Player ' + (i+1) + '" data-idx="' + i + '">' +
+          (names.length > 2 ? '<button class="remove" data-idx="' + i + '" title="Remove player">×</button>' : '');
+        c.appendChild(row);
+      });
+      
+      // Wire up changes
+      c.querySelectorAll('input').forEach(function(inp) {
+        inp.addEventListener('input', function() {
+          var idx = parseInt(this.getAttribute('data-idx'), 10);
+          window._setupNames[idx] = this.value;
+          // Persist immediately so refresh keeps names
+          try { localStorage.setItem(LS_PLAYERS, JSON.stringify(window._setupNames)); } catch (e) {}
+        });
+      });
+      c.querySelectorAll('.remove').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var idx = parseInt(this.getAttribute('data-idx'), 10);
+          window._setupNames.splice(idx, 1);
+          renderPlayerInputs();
+        });
+      });
+      
+      // Update add-player button availability
+      var addBtn = document.getElementById('btn-add-player');
+      addBtn.disabled = (names.length >= 5);
+      addBtn.textContent = names.length >= 5 ? 'Max 5 players' : '+ Add Player';
+    }
+    
+    document.getElementById('btn-add-player').addEventListener('click', function() {
+      if (window._setupNames.length >= 5) return;
+      window._setupNames.push('Player ' + (window._setupNames.length + 1));
+      renderPlayerInputs();
+    });
+    
+    document.getElementById('btn-start').addEventListener('click', function() {
+      var names = (window._setupNames || []).map(function(n) { return (n || '').trim(); });
+      if (names.some(function(n) { return !n; })) {
+        alert('All players need a name.');
+        return;
+      }
+      if (names.length < 2 || names.length > 5) {
+        alert('Need 2 to 5 players.');
+        return;
+      }
+      state.players = names.map(function(n) {
+        var scores = {};
+        CATEGORIES.forEach(function(c) { scores[c.key] = null; });
+        return { name: n, scores: scores };
+      });
+      // Random starting player
+      state.currentPlayerIdx = Math.floor(Math.random() * state.players.length);
+      state.started = true;
+      state.ended = false;
+      state.startTime = new Date().toISOString();
+      state.endTime = null;
+      saveLastPlayerNames();
+      saveGameState();
+      showScreen('screen-game');
+      renderScorecard();
+    });
+    
+    document.getElementById('btn-view-stats').addEventListener('click', function() {
+      showScreen('screen-stats');
+      renderStats();
+    });
+    
+    // =============================================================================
+    // GAME SCREEN — Scorecard
+    // =============================================================================
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+      document.getElementById(id).classList.add('active');
+    }
+    
+    function calcUpperSum(p) {
+      var sum = 0;
+      ['ones','twos','threes','fours','fives','sixes'].forEach(function(k) {
+        if (typeof p.scores[k] === 'number') sum += p.scores[k];
+      });
+      return sum;
+    }
+    // Running differential vs. the pace target needed for the +50 bonus.
+    // Pace target: 3 of each die value = 3, 6, 9, 12, 15, 18 (totals 63).
+    // We only sum the pace for categories actually scored so far,
+    // then return (actualSum - paceTarget). Positive = ahead of pace; negative = behind.
+    var UPPER_KEYS = ['ones','twos','threes','fours','fives','sixes'];
+    var UPPER_PACE = { ones:3, twos:6, threes:9, fours:12, fives:15, sixes:18 };
+    function calcBonusDiff(p) {
+      var actual = 0, target = 0, anyScored = false;
+      UPPER_KEYS.forEach(function(k) {
+        if (typeof p.scores[k] === 'number') {
+          actual += p.scores[k];
+          target += UPPER_PACE[k];
+          anyScored = true;
         }
       });
+      return { diff: actual - target, anyScored: anyScored };
     }
-    pingSupabase();
-    setInterval(pingSupabase, 30000);
+    function calcBonus(p) {
+      return calcUpperSum(p) >= 63 ? 50 : 0;
+    }
+    function calcTotal(p) {
+      var sum = calcBonus(p);
+      CATEGORIES.forEach(function(c) {
+        if (typeof p.scores[c.key] === 'number') sum += p.scores[c.key];
+      });
+      return sum;
+    }
     
-    // ===== Service worker =====
+    // Render a small die face SVG with 1-6 dots
+    function diceSvg(n) {
+      // Dot positions in a 3x3 grid (centers in % terms)
+      var positions = {
+        1: [[50, 50]],
+        2: [[28, 28], [72, 72]],
+        3: [[28, 28], [50, 50], [72, 72]],
+        4: [[28, 28], [72, 28], [28, 72], [72, 72]],
+        5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
+        6: [[28, 25], [72, 25], [28, 50], [72, 50], [28, 75], [72, 75]]
+      };
+      var dots = positions[n] || [];
+      var size = 28;
+      var html = '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" style="vertical-align:middle">';
+      html += '<rect x="6" y="6" width="88" height="88" rx="14" ry="14" fill="#fff" stroke="#2c2a25" stroke-width="4"/>';
+      dots.forEach(function(d) {
+        html += '<circle cx="' + d[0] + '" cy="' + d[1] + '" r="8" fill="#2c2a25"/>';
+      });
+      html += '</svg>';
+      return html;
+    }
+    
+    function renderScorecard() {
+      var tbl = document.getElementById('score-table');
+      var current = state.currentPlayerIdx;
+      var h = '';
+      // Header
+      h += '<thead><tr><th class="cat-header">Category</th>';
+      state.players.forEach(function(p, i) {
+        var activeMark = (i === current && !state.ended) ? ' active-col' : '';
+        h += '<th class="player-col-' + (i+1) + activeMark + '">';
+        h += escapeHtml(p.name);
+        h += '</th>';
+      });
+      h += '</tr></thead><tbody>';
+      
+      // Upper section
+      CATEGORIES.filter(function(c) { return c.group === 'upper'; }).forEach(function(cat) {
+        h += renderRow(cat, current);
+      });
+      // Upper Sum row (auto) — with running differential vs +50 bonus pace
+      h += '<tr class="row-summary"><td class="cat-name">Sum</td>';
+      state.players.forEach(function(p, i) {
+        var sum = calcUpperSum(p);
+        var d = calcBonusDiff(p);
+        var diffLabel = '';
+        if (d.anyScored) {
+          var sign = d.diff > 0 ? '+' : '';
+          var color = d.diff > 0 ? 'var(--accent)' : d.diff < 0 ? 'var(--red)' : 'var(--text-dim)';
+          diffLabel = ' <span style="color:' + color + ';font-weight:600">(' + sign + d.diff + ')</span>';
+        }
+        h += '<td class="auto' + (i === current && !state.ended ? ' active-col' : '') + '">' + sum + diffLabel + '</td>';
+      });
+      h += '</tr>';
+      // Bonus row (auto)
+      h += '<tr class="row-bonus"><td class="cat-name">Bonus</td>';
+      state.players.forEach(function(p, i) {
+        var bonus = calcBonus(p);
+        h += '<td class="auto' + (i === current && !state.ended ? ' active-col' : '') + '" style="color:' + (bonus ? 'var(--accent)' : 'var(--text-dim)') + ';font-weight:' + (bonus ? '700' : '400') + '">' + (bonus ? '+50' : '–') + '</td>';
+      });
+      h += '</tr>';
+      
+      // Lower section
+      CATEGORIES.filter(function(c) { return c.group === 'lower'; }).forEach(function(cat) {
+        h += renderRow(cat, current);
+      });
+      
+      // Total row (auto)
+      h += '<tr class="row-total"><td class="cat-name" style="color:var(--header-text)">TOTAL</td>';
+      state.players.forEach(function(p, i) {
+        h += '<td' + (i === current && !state.ended ? ' class="active-col"' : '') + '>' + calcTotal(p) + '</td>';
+      });
+      h += '</tr>';
+      
+      h += '</tbody>';
+      tbl.innerHTML = h;
+    }
+    
+    function renderRow(cat, currentPlayer) {
+      var label;
+      if (cat.dice) {
+        label = diceSvg(cat.dice);
+      } else {
+        label = escapeHtml(cat.name);
+      }
+      var h = '<tr><td class="cat-name">' + label + '</td>';
+      state.players.forEach(function(p, i) {
+        var val = p.scores[cat.key];
+        var isFilled = (val !== null && val !== undefined);
+        var isActive = (i === currentPlayer) && !state.ended;
+        var cls = 'score-cell';
+        var content = '';
+        if (!isFilled) {
+          content = '–';
+          if (!isActive) cls += ' disabled';
+        } else if (val === 0) {
+          cls += ' filled zero';
+          content = '0';
+        } else {
+          cls += ' filled';
+          content = val;
+        }
+        if (isActive) cls += ' active-col';
+        h += '<td class="' + cls + '" data-player="' + i + '" data-cat="' + cat.key + '">' + content + '</td>';
+      });
+      h += '</tr>';
+      return h;
+    }
+    
+    // Tap to enter score (active player's empty cells, OR any filled cell for correction)
+    document.getElementById('score-table').addEventListener('click', function(e) {
+      var cell = e.target.closest('.score-cell');
+      if (!cell) return;
+      if (cell.classList.contains('disabled')) return; // inactive player's empty cell — not tappable
+      var playerIdx = parseInt(cell.getAttribute('data-player'), 10);
+      var catKey = cell.getAttribute('data-cat');
+      openScoreModal(playerIdx, catKey);
+    });
+    
+    // =============================================================================
+    // SCORE INPUT MODAL
+    // =============================================================================
+    var _currentEditCell = null;
+    
+    function openScoreModal(playerIdx, catKey) {
+      var p = state.players[playerIdx];
+      var cat = CATEGORIES.find(function(c) { return c.key === catKey; });
+      if (!p || !cat) return;
+      _currentEditCell = { playerIdx: playerIdx, catKey: catKey };
+      
+      var current = p.scores[catKey];
+      var modal = document.getElementById('score-modal');
+      
+      var h = '<h3>' + escapeHtml(cat.name) + ' — ' + escapeHtml(p.name) + '</h3>';
+      h += '<div id="picker-body">' + buildPickerBody(cat) + '</div>';
+      
+      h += '<div class="modal-buttons" id="modal-bottom-row">';
+      h += '<button class="btn" id="btn-modal-cancel">Cancel</button>';
+      if (current != null) h += '<button class="btn danger" id="btn-modal-clear">Clear</button>';
+      h += '</div>';
+      
+      modal.innerHTML = h;
+      document.getElementById('score-modal-overlay').classList.add('open');
+      
+      // Wire cancel/clear
+      document.getElementById('btn-modal-cancel').addEventListener('click', closeScoreModal);
+      var clearBtn = document.getElementById('btn-modal-clear');
+      if (clearBtn) clearBtn.addEventListener('click', function() {
+        p.scores[catKey] = null;
+        closeScoreModal();
+        renderScorecard();
+      });
+      
+      // Wire the category-specific picker after it's in DOM
+      wirePicker(cat);
+    }
+    
+    // -------------------------------------------------------------
+    // Picker body builders — category-specific UI
+    // -------------------------------------------------------------
+    function buildPickerBody(cat) {
+      if (cat.group === 'upper') return buildUpperPicker(cat);
+      if (cat.key === 'pair') return buildSinglePairPicker();
+      if (cat.key === 'three') return buildOfAKindPicker(3);
+      if (cat.key === 'four') return buildOfAKindPicker(4);
+      if (cat.key === 'twoPair') return buildTwoPairsPicker();
+      if (cat.key === 'house') return buildFullHousePicker();
+      if (cat.key === 'smallSt') return buildFixedPicker(15, 'Sm. Straight', [1,2,3,4,5]);
+      if (cat.key === 'largeSt') return buildFixedPicker(20, 'Lg. Straight', [2,3,4,5,6]);
+      if (cat.key === 'yatzy') return buildYatzyPicker();
+      if (cat.key === 'chance') return buildChancePicker();
+      return '<div class="dim">Unsupported category</div>';
+    }
+    
+    function diceGroup(n, count) {
+      var html = '';
+      for (var i = 0; i < count; i++) html += diceSvg(n);
+      return html;
+    }
+    
+    // Upper: 5 rows of N copies of the same die
+    function buildUpperPicker(cat) {
+      var n = cat.dice;
+      var h = '<div class="picker-rows">';
+      for (var count = 1; count <= 5; count++) {
+        var score = n * count;
+        h += '<div class="picker-row" data-score="' + score + '">';
+        h += '<div class="picker-dice">' + diceGroup(n, count) + '</div>';
+        h += '<div class="picker-score">' + score + '</div>';
+        h += '</div>';
+      }
+      // 0 / skip option
+      h += '<div class="picker-row picker-skip" data-score="0">';
+      h += '<div class="picker-dice picker-skip-label">— skip / 0 —</div>';
+      h += '<div class="picker-score">0</div>';
+      h += '</div>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Pair: 6 rows, one for each dice value (1+1, 2+2, ... 6+6)
+    function buildSinglePairPicker() {
+      var h = '<div class="picker-rows">';
+      for (var n = 1; n <= 6; n++) {
+        var score = n * 2;
+        h += '<div class="picker-row" data-score="' + score + '">';
+        h += '<div class="picker-dice">' + diceGroup(n, 2) + '</div>';
+        h += '<div class="picker-score">' + score + '</div>';
+        h += '</div>';
+      }
+      h += '<div class="picker-row picker-skip" data-score="0">';
+      h += '<div class="picker-dice picker-skip-label">— skip / 0 —</div>';
+      h += '<div class="picker-score">0</div>';
+      h += '</div>';
+      h += '</div>';
+      return h;
+    }
+    
+    // 3 of a kind / 4 of a kind: 6 rows of N copies
+    function buildOfAKindPicker(count) {
+      var h = '<div class="picker-rows">';
+      for (var n = 1; n <= 6; n++) {
+        var score = n * count;
+        h += '<div class="picker-row" data-score="' + score + '">';
+        h += '<div class="picker-dice">' + diceGroup(n, count) + '</div>';
+        h += '<div class="picker-score">' + score + '</div>';
+        h += '</div>';
+      }
+      h += '<div class="picker-row picker-skip" data-score="0">';
+      h += '<div class="picker-dice picker-skip-label">— skip / 0 —</div>';
+      h += '<div class="picker-score">0</div>';
+      h += '</div>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Two pairs: two columns, each with 6 selectable rows (1+1 ... 6+6).
+    // Picking from one column disables the same number in the other.
+    function buildTwoPairsPicker() {
+      var h = '<div class="picker-instructions">Pick one from each column — different numbers</div>';
+      h += '<div class="picker-2col">';
+      for (var col = 0; col < 2; col++) {
+        var colLabel = col === 0 ? 'First pair' : 'Second pair';
+        h += '<div class="picker-col">';
+        h += '<div class="picker-col-label">' + colLabel + '</div>';
+        for (var n = 1; n <= 6; n++) {
+          h += '<div class="picker-row picker-sub" data-col="' + col + '" data-n="' + n + '">';
+          h += '<div class="picker-dice">' + diceGroup(n, 2) + '</div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+      h += '<div class="picker-total-row"><div class="picker-total" id="picker-total">–</div></div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" id="btn-2p-confirm" disabled>Confirm</button>';
+      h += '<button class="btn" id="btn-2p-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Full house: column 1 = three of a kind (1+1+1 ... 6+6+6), column 2 = pair (1+1 ... 6+6)
+    function buildFullHousePicker() {
+      var h = '<div class="picker-instructions">Pick the triplet and the pair — different numbers</div>';
+      h += '<div class="picker-2col">';
+      for (var col = 0; col < 2; col++) {
+        var colLabel = col === 0 ? 'Three of' : 'Pair of';
+        var count = col === 0 ? 3 : 2;
+        h += '<div class="picker-col">';
+        h += '<div class="picker-col-label">' + colLabel + '</div>';
+        for (var n = 1; n <= 6; n++) {
+          h += '<div class="picker-row picker-sub" data-col="' + col + '" data-n="' + n + '" data-count="' + count + '">';
+          h += '<div class="picker-dice">' + diceGroup(n, count) + '</div>';
+          h += '</div>';
+        }
+        h += '</div>';
+      }
+      h += '</div>';
+      h += '<div class="picker-total-row"><div class="picker-total" id="picker-total">–</div></div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" id="btn-fh-confirm" disabled>Confirm</button>';
+      h += '<button class="btn" id="btn-fh-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Straight: single row showing the straight, score / skip buttons
+    function buildFixedPicker(score, label, diceArr) {
+      var h = '<div class="picker-rows">';
+      h += '<div class="picker-row picker-row-static">';
+      h += '<div class="picker-dice">';
+      diceArr.forEach(function(d) { h += diceSvg(d); });
+      h += '</div>';
+      h += '</div>';
+      h += '</div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" data-score="' + score + '" id="btn-fixed-score">Score ' + score + '</button>';
+      h += '<button class="btn" data-score="0" id="btn-fixed-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Yatzy: just a big red YATZY label + Score 50 / Skip
+    function buildYatzyPicker() {
+      var h = '<div class="picker-rows">';
+      h += '<div class="picker-row picker-row-static">';
+      h += '<div class="yatzy-label">YATZY</div>';
+      h += '</div>';
+      h += '</div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn primary" data-score="50" id="btn-fixed-score">Score 50</button>';
+      h += '<button class="btn" data-score="0" id="btn-fixed-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // Chance: 5 dice icons that cycle 1→6 on tap, live total, skip option
+    function buildChancePicker() {
+      var h = '<div class="picker-instructions">Tap the total of your 5 dice</div>';
+      h += '<div class="chance-grid">';
+      for (var v = 5; v <= 30; v++) {
+        h += '<div class="chance-tile" data-score="' + v + '"><div class="chance-tile-inner">' + v + '</div></div>';
+      }
+      h += '</div>';
+      h += '<div class="picker-action-row">';
+      h += '<button class="btn" id="btn-chance-skip">Skip / 0</button>';
+      h += '</div>';
+      return h;
+    }
+    
+    // -------------------------------------------------------------
+    // Picker wiring
+    // -------------------------------------------------------------
+    function wirePicker(cat) {
+      var body = document.getElementById('picker-body');
+      
+      // Single-tap rows that immediately save a score (upper, single pair, of-a-kind)
+      var directKeys = ['ones','twos','threes','fours','fives','sixes','pair','three','four'];
+      if (directKeys.indexOf(cat.key) >= 0) {
+        body.querySelectorAll('.picker-row[data-score]').forEach(function(row) {
+          row.addEventListener('click', function() {
+            var s = parseInt(this.getAttribute('data-score'), 10);
+            saveScore(s);
+          });
+        });
+        return;
+      }
+      
+      // Two pairs / Full house — pick one from each column then Confirm
+      if (cat.key === 'twoPair' || cat.key === 'house') {
+        var selected = { 0: null, 1: null }; // n values picked per column
+        var rows = body.querySelectorAll('.picker-row.picker-sub');
+        function refresh() {
+          rows.forEach(function(r) {
+            var col = parseInt(r.getAttribute('data-col'), 10);
+            var n = parseInt(r.getAttribute('data-n'), 10);
+            r.classList.remove('selected', 'disabled');
+            if (selected[col] === n) r.classList.add('selected');
+            // Disable the same number in the opposite column
+            var otherCol = 1 - col;
+            if (selected[otherCol] === n) r.classList.add('disabled');
+          });
+          // Update total and confirm
+          var totalEl = document.getElementById('picker-total');
+          var confirmBtn = document.getElementById(cat.key === 'twoPair' ? 'btn-2p-confirm' : 'btn-fh-confirm');
+          if (selected[0] != null && selected[1] != null) {
+            var total;
+            if (cat.key === 'twoPair') {
+              // Two pairs scored as the sum of all 4 dice
+              total = selected[0] * 2 + selected[1] * 2;
+            } else {
+              // Full house = 3 of a kind sum + pair sum
+              total = selected[0] * 3 + selected[1] * 2;
+            }
+            totalEl.textContent = total;
+            confirmBtn.disabled = false;
+            confirmBtn.setAttribute('data-score', total);
+          } else {
+            totalEl.textContent = '–';
+            confirmBtn.disabled = true;
+          }
+        }
+        rows.forEach(function(r) {
+          r.addEventListener('click', function() {
+            if (this.classList.contains('disabled')) return;
+            var col = parseInt(this.getAttribute('data-col'), 10);
+            var n = parseInt(this.getAttribute('data-n'), 10);
+            // Toggle: tap again to deselect
+            if (selected[col] === n) selected[col] = null;
+            else selected[col] = n;
+            refresh();
+          });
+        });
+        var confirmBtn = document.getElementById(cat.key === 'twoPair' ? 'btn-2p-confirm' : 'btn-fh-confirm');
+        confirmBtn.addEventListener('click', function() {
+          var s = parseInt(this.getAttribute('data-score'), 10);
+          if (!isNaN(s)) saveScore(s);
+        });
+        var skipBtn = document.getElementById(cat.key === 'twoPair' ? 'btn-2p-skip' : 'btn-fh-skip');
+        skipBtn.addEventListener('click', function() { saveScore(0); });
+        return;
+      }
+      
+      // Straights + Yatzy — Score/Skip buttons each with data-score
+      if (cat.key === 'smallSt' || cat.key === 'largeSt' || cat.key === 'yatzy') {
+        body.querySelectorAll('button[data-score]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var s = parseInt(this.getAttribute('data-score'), 10);
+            saveScore(s);
+          });
+        });
+        // Auto-focus the "Score X" button so a single tap/Enter confirms it —
+        // consistent with the other pickers where you pick then confirm.
+        var scoreBtn = document.getElementById('btn-fixed-score');
+        if (scoreBtn) {
+          setTimeout(function() { scoreBtn.focus(); }, 50);
+        }
+        return;
+      }
+      
+      // Chance — tap a total tile to save; Skip = 0
+      if (cat.key === 'chance') {
+        body.querySelectorAll('.chance-tile').forEach(function(t) {
+          t.addEventListener('click', function() {
+            var s = parseInt(this.getAttribute('data-score'), 10);
+            if (!isNaN(s)) saveScore(s);
+          });
+        });
+        document.getElementById('btn-chance-skip').addEventListener('click', function() { saveScore(0); });
+        return;
+      }
+    }
+    
+    function saveScore(v) {
+      if (!_currentEditCell) return;
+      var savedPlayerIdx = _currentEditCell.playerIdx;
+      var savedCatKey = _currentEditCell.catKey;
+      var p = state.players[savedPlayerIdx];
+      var wasEmpty = (p.scores[savedCatKey] === null || p.scores[savedCatKey] === undefined);
+      p.scores[savedCatKey] = v;
+      closeScoreModal();
+      
+      // Auto-advance turn only when:
+      //   1. The active player was the one editing
+      //   2. This was an empty cell being filled (not a correction)
+      //   3. There's at least one MORE empty cell remaining in the game
+      //      (so the last input stays editable in case it was wrong)
+      var wasActive = (savedPlayerIdx === state.currentPlayerIdx);
+      if (wasActive && wasEmpty) {
+        var emptyCount = 0;
+        state.players.forEach(function(pl) {
+          CATEGORIES.forEach(function(c) {
+            if (pl.scores[c.key] === null || pl.scores[c.key] === undefined) emptyCount++;
+          });
+        });
+        if (emptyCount >= 1) {
+          advanceTurn();
+        }
+      }
+      
+      renderScorecard();
+      saveGameState();
+    }
+    
+    function advanceTurn() {
+      var n = state.players.length;
+      for (var step = 1; step <= n; step++) {
+        var idx = (state.currentPlayerIdx + step) % n;
+        var p = state.players[idx];
+        // Skip players who have no empty cells left
+        var anyEmpty = CATEGORIES.some(function(c) {
+          return p.scores[c.key] === null || p.scores[c.key] === undefined;
+        });
+        if (anyEmpty) {
+          state.currentPlayerIdx = idx;
+          return;
+        }
+      }
+      // Everyone is done — leave currentPlayerIdx where it is
+    }
+    
+    function closeScoreModal() {
+      document.getElementById('score-modal-overlay').classList.remove('open');
+      _currentEditCell = null;
+    }
+    document.getElementById('score-modal-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeScoreModal();
+    });
+    
+    // =============================================================================
+    // END GAME
+    // =============================================================================
+    document.getElementById('btn-end-game').addEventListener('click', function() {
+      // Check that every cell is filled — if not, refuse to end
+      var unfilled = 0;
+      state.players.forEach(function(p) {
+        CATEGORIES.forEach(function(c) {
+          if (p.scores[c.key] === null || p.scores[c.key] === undefined) unfilled++;
+        });
+      });
+      if (unfilled > 0) {
+        alert(unfilled + ' score cell' + (unfilled === 1 ? '' : 's') + ' still empty.\n\nFill all cells before ending the game, or tap Cancel Game to abandon it.');
+        return;
+      }
+      
+      state.ended = true;
+      state.endTime = new Date().toISOString();
+      
+      // Determine winner(s) — highest total; ties = all share a draw
+      var totals = state.players.map(function(p, i) { return { idx: i, name: p.name, total: calcTotal(p) }; });
+      var maxTotal = Math.max.apply(null, totals.map(function(t) { return t.total; }));
+      var topPlayers = totals.filter(function(t) { return t.total === maxTotal; });
+      var isDraw = topPlayers.length > 1;
+      
+      var historyEntry = {
+        playedAt: new Date().toISOString(),
+        startTime: state.startTime,
+        endTime: state.endTime,
+        players: state.players.map(function(p) {
+          return { name: p.name, scores: p.scores, total: calcTotal(p) };
+        }),
+        winner: isDraw ? null : topPlayers[0].name,
+        draw: isDraw,
+        drawNames: isDraw ? topPlayers.map(function(t) { return t.name; }) : [],
+        maxTotal: maxTotal,
+        minTotal: Math.min.apply(null, totals.map(function(t) { return t.total; }))
+      };
+      
+      // Save to Supabase
+      if (supabase) {
+        supabase.from('yatzy_history').insert({
+          played_at: historyEntry.playedAt,
+          state: historyEntry,
+          players: historyEntry.players,
+          winner: historyEntry.winner,
+          is_draw: historyEntry.draw,
+          max_total: historyEntry.maxTotal,
+          min_total: historyEntry.minTotal
+        }).then(function(r) {
+          if (r.error) alert('Could not save to cloud: ' + r.error.message);
+        }).catch(function(){});
+      }
+      
+      // Persist player names (but clear in-progress state)
+      saveLastPlayerNames();
+      clearGameState();
+      
+      // Show results modal
+      showResultsModal(historyEntry);
+    });
+    
+    document.getElementById('btn-cancel-game').addEventListener('click', function() {
+      if (!confirm('Cancel game without saving?')) return;
+      // Preserve player names but wipe game state
+      saveLastPlayerNames();
+      clearGameState();
+      state.started = false;
+      state.ended = false;
+      state.players = [];
+      // Re-seed setup names from what we just saved
+      window._setupNames = loadLastPlayerNames() || ['Player 1', 'Player 2'];
+      showScreen('screen-setup');
+      renderPlayerInputs();
+    });
+    
+    function showResultsModal(entry) {
+      var modal = document.getElementById('score-modal');
+      var h = '';
+      if (entry.draw) {
+        h += '<h3 style="text-align:center">🤝 Draw!</h3>';
+        h += '<div class="cat-detail" style="text-align:center">' + entry.drawNames.join(' & ') + ' tied at ' + entry.maxTotal + ' points</div>';
+      } else {
+        h += '<h3 style="text-align:center">🏆 ' + escapeHtml(entry.winner) + ' wins!</h3>';
+        h += '<div class="cat-detail" style="text-align:center">' + entry.maxTotal + ' points</div>';
+      }
+      h += '<div style="margin:14px 0;border-top:1px solid var(--border);padding-top:10px">';
+      entry.players.slice().sort(function(a,b){return b.total-a.total;}).forEach(function(p, idx) {
+        var trophy = '';
+        if (!entry.draw && idx === 0) trophy = '🏆 ';
+        else if (entry.draw && entry.drawNames.indexOf(p.name) >= 0) trophy = '🤝 ';
+        h += '<div style="display:flex;justify-content:space-between;padding:6px 0"><span>' + trophy + escapeHtml(p.name) + '</span><span style="font-weight:600">' + p.total + '</span></div>';
+      });
+      h += '</div>';
+      h += '<div class="modal-buttons">';
+      h += '<button class="btn primary full" id="btn-results-done">Done</button>';
+      h += '</div>';
+      modal.innerHTML = h;
+      document.getElementById('score-modal-overlay').classList.add('open');
+      document.getElementById('btn-results-done').addEventListener('click', function() {
+        closeScoreModal();
+        clearGameState();
+        state.started = false;
+        state.ended = false;
+        state.players = [];
+        window._setupNames = loadLastPlayerNames() || ['Player 1', 'Player 2'];
+        showScreen('screen-setup');
+        renderPlayerInputs();
+      });
+    }
+    
+    // =============================================================================
+    // STATS SCREEN
+    // =============================================================================
+    document.getElementById('btn-stats-back').addEventListener('click', function() {
+      showScreen('screen-setup');
+    });
+    
+    function renderStats() {
+      var panel = document.getElementById('stats-panel');
+      panel.innerHTML = '<div class="dim center" style="padding:20px">Loading…</div>';
+      if (!supabase) {
+        panel.innerHTML = '<div class="dim center" style="padding:20px">Supabase not configured.</div>';
+        return;
+      }
+      supabase.from('yatzy_history').select('*').order('played_at', { ascending: false }).limit(500).then(function(r) {
+        if (r.error) {
+          panel.innerHTML = '<div class="dim center" style="padding:20px">Error: ' + escapeHtml(r.error.message) + '</div>';
+          return;
+        }
+        var games = r.data || [];
+        if (!games.length) {
+          panel.innerHTML = '<div class="dim center" style="padding:20px">No games yet — finish a game to see stats.</div>';
+          return;
+        }
+        // Build player rollups
+        var byPlayer = {};
+        function row(name) {
+          if (!byPlayer[name]) byPlayer[name] = { name: name, wins: 0, losses: 0, draws: 0, highest: 0, lowest: Infinity, games: 0, scoredGames: 0, totalSum: 0 };
+          return byPlayer[name];
+        }
+        games.forEach(function(g) {
+          var players = g.players || (g.state && g.state.players) || [];
+          var isDraw = g.is_draw;
+          var winner = g.winner;
+          players.forEach(function(p) {
+            var pr = row(p.name);
+            pr.games++;
+            // Only count totals when they're real numbers (skip null/undefined for legacy imports)
+            if (typeof p.total === 'number') {
+              pr.totalSum += p.total;
+              pr.scoredGames++;
+              if (p.total > pr.highest) pr.highest = p.total;
+              if (p.total < pr.lowest) pr.lowest = p.total;
+            }
+            if (isDraw) {
+              // If their name is in the draw set, count as draw; otherwise loss
+              var ds = g.state && g.state.drawNames;
+              if (ds && ds.indexOf(p.name) >= 0) pr.draws++;
+              else pr.losses++;
+            } else {
+              if (p.name === winner) pr.wins++;
+              else pr.losses++;
+            }
+          });
+        });
+        
+        var rows = Object.keys(byPlayer).map(function(k) { return byPlayer[k]; });
+        rows.sort(function(a, b) { return b.wins - a.wins || b.highest - a.highest; });
+        
+        var h = '';
+        h += '<div class="stats-row header"><div>Player</div><div>W</div><div>L</div><div>D</div><div>High / Low</div></div>';
+        rows.forEach(function(p) {
+          var avg = p.scoredGames ? Math.round(p.totalSum / p.scoredGames) : 0;
+          var hi = p.scoredGames ? p.highest : null;
+          var lo = (p.scoredGames && p.lowest !== Infinity) ? p.lowest : null;
+          h += '<div class="stats-row">';
+          h += '<div class="name">' + escapeHtml(p.name) + ' <span class="dim small">(' + p.games + 'g' + (p.scoredGames ? ' · avg ' + avg : '') + ')</span></div>';
+          h += '<div>' + p.wins + '</div>';
+          h += '<div>' + p.losses + '</div>';
+          h += '<div>' + p.draws + '</div>';
+          h += '<div class="dim small">' + (hi != null ? hi : '–') + ' / ' + (lo != null ? lo : '–') + '</div>';
+          h += '</div>';
+        });
+        h += '<div class="dim small" style="text-align:center;padding:12px 0;border-top:1px solid var(--border);margin-top:8px">' + games.length + ' game' + (games.length === 1 ? '' : 's') + ' recorded</div>';
+        panel.innerHTML = h;
+      });
+    }
+    
+    // =============================================================================
+    // UTILITIES
+    // =============================================================================
+    function escapeHtml(s) {
+      return (s == null ? '' : String(s))
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+    
+    // =============================================================================
+    // RESUME (load in-progress game from localStorage)
+    // =============================================================================
+    function checkForResume() {
+      var saved = loadSavedGameState();
+      var banner = document.getElementById('resume-banner');
+      if (!saved) {
+        banner.style.display = 'none';
+        return;
+      }
+      banner.style.display = '';
+      // Detail line: how many cells filled, when started
+      var filled = 0;
+      var total = saved.players.length * CATEGORIES.length;
+      saved.players.forEach(function(p) {
+        CATEGORIES.forEach(function(c) {
+          if (p.scores[c.key] !== null && p.scores[c.key] !== undefined) filled++;
+        });
+      });
+      var when = '';
+      try {
+        var t = new Date(saved.startTime);
+        when = ' · started ' + t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      } catch (e) {}
+      document.getElementById('resume-detail').textContent =
+        saved.players.length + ' players · ' + filled + '/' + total + ' cells filled' + when;
+    }
+    
+    document.getElementById('btn-resume').addEventListener('click', function() {
+      var saved = loadSavedGameState();
+      if (!saved) return;
+      // Restore state
+      state = saved;
+      showScreen('screen-game');
+      renderScorecard();
+    });
+    
+    document.getElementById('btn-discard-resume').addEventListener('click', function() {
+      if (!confirm('Discard the in-progress game? This cannot be undone.')) return;
+      clearGameState();
+      checkForResume();
+    });
+    
+    // =============================================================================
+    // INIT
+    // =============================================================================
+    renderPlayerInputs();
+    checkForResume();
+    initSupabase();
+    
+    // Service worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(function() {});
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
     }
   </script>
 </body>
