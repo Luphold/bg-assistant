@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Yatzy Scorecard 1.5.0 -->
+<!-- Yatzy Scorecard 1.6.1 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -277,16 +277,32 @@
     .picker-action-row { display: flex; gap: 8px; margin-top: 10px; }
     .picker-action-row .btn { flex: 1; }
     
-    /* Chance picker */
-    .picker-chance-row {
-      display: flex; gap: 8px; justify-content: center; margin: 12px 0;
+    /* Chance picker — tappable dice-styled tiles showing possible totals 5-30 */
+    .chance-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin: 12px 0;
     }
-    .picker-die-tappable {
-      cursor: pointer; padding: 4px; border-radius: 6px;
-      transition: background .12s;
+    .chance-tile {
+      aspect-ratio: 1 / 1;
+      cursor: pointer;
+      background: #ffffff;
+      border: 2px solid var(--text);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .12s, transform .06s, border-color .12s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-    .picker-die-tappable:hover { background: var(--accent-soft); }
-    .picker-die-tappable:active { transform: scale(0.95); }
+    .chance-tile:hover { background: var(--accent-soft); border-color: var(--accent); }
+    .chance-tile:active { transform: scale(0.94); }
+    .chance-tile-inner {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1;
+    }
     
     /* Yatzy big label */
     .yatzy-label {
@@ -299,8 +315,9 @@
       .picker-dice svg { width: 22px !important; height: 22px !important; }
       .picker-row { padding: 7px 10px; }
       .picker-score { font-size: 14px; }
-      .picker-die-tappable svg { width: 38px !important; height: 38px !important; }
       .picker-2col .picker-dice svg { width: 18px !important; height: 18px !important; }
+      .chance-grid { gap: 6px; grid-template-columns: repeat(5, 1fr); }
+      .chance-tile-inner { font-size: 18px; }
     }
     
     /* History/stats */
@@ -394,7 +411,7 @@
     
     <div class="footer">
       Yatzy Scorecard
-      <div class="version">v1.5.0</div>
+      <div class="version">v1.6.1</div>
     </div>
   </div>
   
@@ -407,7 +424,7 @@
     // =============================================================================
     // SWEDISH YATZY — Category definitions
     // =============================================================================
-    var VERSION = '1.5.0';
+    var VERSION = '1.6.1';
     
     var CATEGORIES = [
       { key: 'ones',    name: 'Ones',          dice: 1, group: 'upper', max: 5 },
@@ -1041,15 +1058,13 @@
     
     // Chance: 5 dice icons that cycle 1→6 on tap, live total, skip option
     function buildChancePicker() {
-      var h = '<div class="picker-instructions">Tap each die to cycle 1→6</div>';
-      h += '<div class="picker-chance-row" id="chance-dice">';
-      for (var i = 0; i < 5; i++) {
-        h += '<div class="picker-die-tappable" data-idx="' + i + '" data-val="1">' + diceSvg(1) + '</div>';
+      var h = '<div class="picker-instructions">Tap the total of your 5 dice</div>';
+      h += '<div class="chance-grid">';
+      for (var v = 5; v <= 30; v++) {
+        h += '<div class="chance-tile" data-score="' + v + '"><div class="chance-tile-inner">' + v + '</div></div>';
       }
       h += '</div>';
-      h += '<div class="picker-total-row"><div class="picker-total" id="picker-total">5</div></div>';
       h += '<div class="picker-action-row">';
-      h += '<button class="btn primary" id="btn-chance-confirm">Confirm</button>';
       h += '<button class="btn" id="btn-chance-skip">Skip / 0</button>';
       h += '</div>';
       return h;
@@ -1136,28 +1151,22 @@
             saveScore(s);
           });
         });
+        // Auto-focus the "Score X" button so a single tap/Enter confirms it —
+        // consistent with the other pickers where you pick then confirm.
+        var scoreBtn = document.getElementById('btn-fixed-score');
+        if (scoreBtn) {
+          setTimeout(function() { scoreBtn.focus(); }, 50);
+        }
         return;
       }
       
-      // Chance — tappable dice + Confirm + Skip
+      // Chance — tap a total tile to save; Skip = 0
       if (cat.key === 'chance') {
-        var diceVals = [1, 1, 1, 1, 1];
-        var diceEls = body.querySelectorAll('.picker-die-tappable');
-        function updateTotal() {
-          var sum = diceVals.reduce(function(a,b){return a+b;}, 0);
-          document.getElementById('picker-total').textContent = sum;
-        }
-        diceEls.forEach(function(d, idx) {
-          d.addEventListener('click', function() {
-            diceVals[idx] = (diceVals[idx] % 6) + 1;
-            this.setAttribute('data-val', diceVals[idx]);
-            this.innerHTML = diceSvg(diceVals[idx]);
-            updateTotal();
+        body.querySelectorAll('.chance-tile').forEach(function(t) {
+          t.addEventListener('click', function() {
+            var s = parseInt(this.getAttribute('data-score'), 10);
+            if (!isNaN(s)) saveScore(s);
           });
-        });
-        document.getElementById('btn-chance-confirm').addEventListener('click', function() {
-          var sum = diceVals.reduce(function(a,b){return a+b;}, 0);
-          saveScore(sum);
         });
         document.getElementById('btn-chance-skip').addEventListener('click', function() { saveScore(0); });
         return;
